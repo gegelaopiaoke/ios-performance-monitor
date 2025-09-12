@@ -29,6 +29,17 @@ from ios_device.cli.base import InstrumentsBase
 from ios_device.util.utils import convertBytes
 from ios_device.remote.remote_lockdown import RemoteLockdownClient
 
+# 导入应用控制相关模块
+try:
+    from pymobiledevice3.services.installation_proxy import InstallationProxyService
+    from pymobiledevice3.lockdown import create_using_usbmux
+    # SpringBoardService 在新版本中可能不可用，我们用其他方法
+    SpringBoardService = None
+except ImportError as e:
+    print(f"警告: 无法导入pymobiledevice3服务: {e}")
+    create_using_usbmux = None
+    SpringBoardService = None
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ios_performance_monitor'
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -47,6 +58,11 @@ performance_data = {
 monitoring_active = True
 monitoring_threads = []
 performance_analyzer = None
+
+# 测试场景管理
+current_test_scenario = None
+scenario_automation = None
+
 
 # 完全复制main.py的TunnelManager类（逻辑一模一样）
 class TunnelManager(object):
@@ -163,6 +179,258 @@ class WebPerformanceAnalyzer(object):
                 rpc.graphics(on_callback_fps_message, 1000)
 
 
+# 真正的iOS应用自动化控制类
+class iOSAutomationController:
+    def __init__(self, udid=None):
+        self.udid = udid
+        
+    def connect(self):
+        """连接到iOS设备"""
+        try:
+            # 检查设备连接状态
+            result = subprocess.run([
+                sys.executable, '-m', 'pymobiledevice3', 'usbmux', 'list'
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0:
+                # 如果没有指定UDID，尝试使用第一个设备
+                if not self.udid or self.udid.strip() == '':
+                    import json
+                    devices = json.loads(result.stdout)
+                    if devices:
+                        self.udid = devices[0]['UniqueDeviceID']
+                        print(f"自动检测到设备: {self.udid}")
+                    else:
+                        print("未找到连接的iOS设备")
+                        return False
+                
+                # 检查指定的设备是否存在
+                if self.udid in result.stdout:
+                    print(f"设备 {self.udid} 连接成功")
+                    return True
+                else:
+                    print(f"设备 {self.udid} 未找到或未连接")
+                    return False
+            else:
+                print(f"无法获取设备列表: {result.stderr}")
+                return False
+        except Exception as e:
+            print(f"连接设备失败: {e}")
+            return False
+    
+    def terminate_app(self, bundle_id):
+        """终止指定应用"""
+        try:
+            # 首先获取应用的PID
+            print(f"🔍 查找应用 {bundle_id} 的进程ID...")
+            result_pid = subprocess.run([
+                sys.executable, '-m', 'pymobiledevice3', 'developer', 'dvt', 
+                'process-id-for-bundle-id', bundle_id
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result_pid.returncode == 0 and result_pid.stdout.strip():
+                pid = result_pid.stdout.strip()
+                print(f"📍 找到应用PID: {pid}")
+                
+                # 使用PID终止应用
+                result_kill = subprocess.run([
+                    sys.executable, '-m', 'pymobiledevice3', 'developer', 'dvt', 'kill', pid
+                ], capture_output=True, text=True, timeout=10)
+                
+                if result_kill.returncode == 0:
+                    print(f"✅ 应用 {bundle_id} (PID: {pid}) 已终止")
+                else:
+                    print(f"⚠️ 终止应用失败: {result_kill.stderr}")
+            else:
+                print(f"ℹ️ 应用 {bundle_id} 未运行或无法找到进程")
+            
+        except Exception as e:
+            print(f"❌ 终止应用时出错: {e}")
+    
+    def launch_app_real_device(self, bundle_id):
+        """在真实设备上启动应用"""
+        try:
+            print(f"🚀 正在启动应用: {bundle_id}")
+            
+            # 方法1: 尝试使用tidevice（如果可用）
+            print("🔧 尝试使用tidevice启动...")
+            result_tidevice = subprocess.run([
+                'tidevice', 'launch', bundle_id
+            ], capture_output=True, text=True, timeout=15)
+            
+            print(f"tidevice返回码: {result_tidevice.returncode}")
+            if result_tidevice.stdout:
+                print(f"tidevice输出: {result_tidevice.stdout}")
+            if result_tidevice.stderr and "error" not in result_tidevice.stderr.lower():
+                print(f"tidevice信息: {result_tidevice.stderr}")
+            
+            if result_tidevice.returncode == 0:
+                print(f"✅ 应用 {bundle_id} 通过tidevice启动成功！")
+                return True
+            
+            # 方法2: 使用pymobiledevice3 (tunnel方式)
+            print("📱 尝试pymobiledevice3 tunnel方式...")
+            result = subprocess.run([
+                sys.executable, '-m', 'pymobiledevice3', 'developer', 'dvt', 'launch',
+                '--tunnel', self.udid,
+                '--kill-existing',
+                bundle_id
+            ], capture_output=True, text=True, timeout=20)
+            
+            print(f"tunnel方法返回码: {result.returncode}")
+            
+            # 检查是否真的启动了（通过查看进程）
+            if result.returncode == 0:
+                time.sleep(2)  # 等待应用启动
+                # 验证应用是否真的在运行
+                if self.verify_app_running(bundle_id):
+                    print(f"✅ 应用 {bundle_id} 确实启动成功！")
+                    return True
+                else:
+                    print(f"⚠️ 命令成功但应用未运行，可能是假成功")
+            
+            # 方法3: 简单粗暴的方法 - 模拟用户点击
+            print("📲 尝试模拟用户操作启动应用...")
+            print("💡 提示: 请手动在手机上点击ReelShort应用启动")
+            print("⏰ 等待5秒供您手动启动...")
+            time.sleep(5)
+            
+            if self.verify_app_running(bundle_id):
+                print(f"✅ 检测到应用 {bundle_id} 已运行！")
+                return True
+            
+            print(f"❌ 所有自动启动方法都失败了")
+            return False
+            
+        except subprocess.TimeoutExpired:
+            print("⏰ 应用启动命令超时")
+            return False
+        except Exception as e:
+            print(f"❌ 启动应用时出错: {e}")
+            return False
+    
+    def verify_app_running(self, bundle_id):
+        """验证应用是否真的在运行"""
+        try:
+            result = subprocess.run([
+                sys.executable, '-m', 'pymobiledevice3', 'developer', 'dvt', 
+                'process-id-for-bundle-id', bundle_id
+            ], capture_output=True, text=True, timeout=10)
+            
+            if result.returncode == 0 and result.stdout.strip():
+                print(f"🔍 发现应用进程: PID {result.stdout.strip()}")
+                return True
+            return False
+        except:
+            return False
+
+
+# 测试场景自动化类
+class TestScenarioAutomation:
+    def __init__(self, udid, bundle_id):
+        self.udid = udid
+        self.bundle_id = bundle_id
+        self.controller = iOSAutomationController(udid)
+        self.is_running = False
+        
+    def run_app_launch_test(self):
+        """运行真正的应用启动测试"""
+        self.is_running = True
+        
+        try:
+            # 发送测试开始信号
+            socketio.emit('scenario_event', {
+                'type': 'test_start',
+                'message': '开始应用启动测试...'
+            })
+            
+            # 连接设备
+            if not self.controller.connect():
+                socketio.emit('scenario_event', {
+                    'type': 'error',
+                    'message': '无法连接到iOS设备'
+                })
+                return False
+            
+            # 执行3次启动测试
+            for i in range(3):
+                if not self.is_running:
+                    break
+                    
+                socketio.emit('scenario_event', {
+                    'type': 'progress',
+                    'message': f'第{i+1}次启动测试...',
+                    'progress': (i / 3) * 100
+                })
+                
+                # 先终止应用
+                self.controller.terminate_app(self.bundle_id)
+                time.sleep(2)
+                
+                # 记录启动开始时间
+                start_time = time.time()
+                
+                # 尝试启动应用
+                success = self.controller.launch_app_real_device(self.bundle_id)
+                
+                # 如果自动启动失败，给用户手动启动的机会
+                if not success:
+                    socketio.emit('scenario_event', {
+                        'type': 'manual_prompt',
+                        'message': f'自动启动失败，请手动在手机上点击ReelShort应用启动'
+                    })
+                    
+                    # 等待用户手动启动，最多等待10秒
+                    manual_start_time = time.time()
+                    for wait_sec in range(10):
+                        if self.controller.verify_app_running(self.bundle_id):
+                            success = True
+                            break
+                        time.sleep(1)
+                    
+                    if success:
+                        socketio.emit('scenario_event', {
+                            'type': 'manual_success',
+                            'message': '检测到应用已手动启动'
+                        })
+                
+                if success:
+                    launch_time = (time.time() - start_time) * 1000  # 转换为毫秒
+                    socketio.emit('scenario_event', {
+                        'type': 'launch_result',
+                        'message': f'第{i+1}次启动成功，耗时: {launch_time:.0f}ms',
+                        'launch_time': launch_time
+                    })
+                else:
+                    socketio.emit('scenario_event', {
+                        'type': 'error',
+                        'message': f'第{i+1}次启动失败（包括手动启动）'
+                    })
+                
+                # 等待应用稳定
+                time.sleep(3)
+            
+            socketio.emit('scenario_event', {
+                'type': 'test_complete',
+                'message': '应用启动测试完成'
+            })
+            
+            return True
+            
+        except Exception as e:
+            socketio.emit('scenario_event', {
+                'type': 'error',
+                'message': f'测试过程中出错: {str(e)}'
+            })
+            return False
+        finally:
+            self.is_running = False
+    
+    def stop(self):
+        """停止测试"""
+        self.is_running = False
+
+
 # 完全复制main.py的权限检查函数（逻辑一模一样）
 def check_admin():
     if platform.system() == "Windows":
@@ -265,6 +533,77 @@ def handle_stop_monitoring():
     print("DEBUG: 监控已完全停止")
 
 
+@socketio.on('start_test_scenario')
+def handle_start_test_scenario(data):
+    global current_test_scenario, scenario_automation, monitoring_active
+    
+    scenario_type = data.get('scenario_type', '')
+    udid = data.get('udid', '')
+    bundle_id = data.get('bundle_id', '')
+    
+    print(f"DEBUG: 收到测试场景请求 - 类型: {scenario_type}, 应用: {bundle_id}")
+    
+    # 检查是否正在监控中
+    if not monitoring_active:
+        emit('scenario_error', {'message': '请先开始性能监控，然后再进行测试场景'})
+        return
+    
+    if current_test_scenario:
+        emit('scenario_error', {'message': '已有测试场景在运行中'})
+        return
+    
+    if scenario_type == 'app_launch':
+        # 创建应用启动测试自动化
+        scenario_automation = TestScenarioAutomation(udid, bundle_id)
+        current_test_scenario = scenario_type
+        
+        # 在后台运行测试，同时继续性能监控
+        def run_test():
+            global current_test_scenario, scenario_automation
+            try:
+                # 发送测试开始标记到性能数据流
+                socketio.emit('test_marker', {
+                    'type': 'test_start',
+                    'scenario': 'app_launch',
+                    'message': '开始应用启动测试'
+                })
+                
+                scenario_automation.run_app_launch_test()
+                
+                # 发送测试结束标记
+                socketio.emit('test_marker', {
+                    'type': 'test_end',
+                    'scenario': 'app_launch',
+                    'message': '应用启动测试完成'
+                })
+            finally:
+                current_test_scenario = None
+                scenario_automation = None
+        
+        threading.Thread(target=run_test).start()
+        emit('scenario_started', {'status': 'success', 'type': scenario_type})
+    
+    else:
+        # 其他测试场景保持原有的计时器模式
+        current_test_scenario = scenario_type
+        emit('scenario_started', {'status': 'success', 'type': scenario_type})
+
+
+@socketio.on('stop_test_scenario')
+def handle_stop_test_scenario():
+    global current_test_scenario, scenario_automation
+    
+    print("DEBUG: 收到停止测试场景请求")
+    
+    if scenario_automation:
+        scenario_automation.stop()
+    
+    current_test_scenario = None
+    scenario_automation = None
+    
+    emit('scenario_stopped', {'status': 'success'})
+
+
 if __name__ == '__main__':
     # 权限检查，自动输入密码
     if not check_admin():
@@ -272,6 +611,114 @@ if __name__ == '__main__':
         run_with_admin_privileges(sys.argv)
         sys.exit()
     
-    print("启动iOS性能监控Web界面...")
-    print("访问地址: http://localhost:5001")
-    socketio.run(app, host='0.0.0.0', port=5001, debug=True)
+    import socket
+    
+    # 获取本机局域网IP地址
+    def is_private_ip(ip_str):
+        """判断是否为私有IP地址（局域网IP）"""
+        try:
+            ip_parts = [int(x) for x in ip_str.split('.')]
+            if len(ip_parts) != 4:
+                return False
+            
+            # 检查私有IP地址范围
+            # 10.0.0.0 - 10.255.255.255 (10/8)
+            if ip_parts[0] == 10:
+                return True
+            
+            # 172.16.0.0 - 172.31.255.255 (172.16/12)
+            if ip_parts[0] == 172 and 16 <= ip_parts[1] <= 31:
+                return True
+            
+            # 192.168.0.0 - 192.168.255.255 (192.168/16)
+            if ip_parts[0] == 192 and ip_parts[1] == 168:
+                return True
+            
+            return False
+        except:
+            return False
+
+    def get_local_ip():
+        """获取本机局域网IP地址，优先选择172段IP"""
+        found_ips = []
+        
+        # 方法1: 通过ifconfig命令获取所有网络接口
+        try:
+            import subprocess
+            result = subprocess.run(['ifconfig'], capture_output=True, text=True)
+            
+            for line in result.stdout.split('\n'):
+                if 'inet ' in line and '127.0.0.1' not in line and '169.254' not in line:
+                    # 提取IP地址
+                    parts = line.split()
+                    for i, part in enumerate(parts):
+                        if part == 'inet' and i + 1 < len(parts):
+                            ip = parts[i + 1]
+                            # 移除可能的子网掩码
+                            if '/' in ip:
+                                ip = ip.split('/')[0]
+                            
+                            # 验证是否为有效的局域网IP
+                            if is_private_ip(ip) and ip.count('.') == 3:
+                                found_ips.append(ip)
+        except Exception:
+            pass
+        
+        # 方法2: 通过socket连接方式获取默认路由IP
+        try:
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
+            
+            # 添加到候选列表
+            if is_private_ip(local_ip) and local_ip not in found_ips:
+                found_ips.append(local_ip)
+        except Exception:
+            pass
+        
+        # 方法3: 通过主机名获取IP
+        try:
+            hostname = socket.gethostname()
+            local_ip = socket.gethostbyname(hostname)
+            if is_private_ip(local_ip) and local_ip not in found_ips:
+                found_ips.append(local_ip)
+        except Exception:
+            pass
+        
+        # 打印调试信息
+        print(f"🔍 检测到的所有局域网IP: {found_ips}")
+        
+        # 优先级排序：172 > 10 > 192.168
+        for ip in found_ips:
+            if ip.startswith('172.'):
+                print(f"✅ 选择172段IP: {ip}")
+                return ip
+        
+        for ip in found_ips:
+            if ip.startswith('10.'):
+                print(f"✅ 选择10段IP: {ip}")
+                return ip
+        
+        for ip in found_ips:
+            if ip.startswith('192.168.'):
+                print(f"✅ 选择192.168段IP: {ip}")
+                return ip
+        
+        print("❌ 未找到局域网IP，使用localhost")
+        return 'localhost'
+    
+    local_ip = get_local_ip()
+    
+    print("🚀 启动iOS性能监控Web界面...")
+    print("="*60)
+    print(f"📱 本地访问地址: http://localhost:5001")
+    print(f"🌐 外网分享地址: http://{local_ip}:5001")
+    print("="*60)
+    print("💡 分享说明:")
+    print("• 把外网分享地址发给同事/朋友，他们可以实时查看你的性能数据")
+    print("• 确保你的设备和他们在同一个网络环境中（如同一WiFi）")
+    print("• 如果无法访问，可能需要关闭防火墙或允许端口5001")
+    print("="*60)
+    
+    socketio.run(app, host='0.0.0.0', port=5001, debug=False, allow_unsafe_werkzeug=True)

@@ -36,266 +36,6 @@
             margin-top: 0;
             color: #1d1d1f;
         }
-        
-        /* 性能阈值和告警样式 */
-        .alert-panel {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        .alert-item {
-            padding: 8px 12px;
-            margin: 5px 0;
-            border-radius: 6px;
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .alert-item.warning {
-            background: #fff3cd;
-            border-color: #ffeaa7;
-            color: #856404;
-        }
-        .alert-item.critical {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            color: #721c24;
-            animation: pulse 2s infinite;
-        }
-        
-        /* 性能评分样式 */
-        .score-item {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px solid transparent;
-            transition: all 0.3s ease;
-        }
-        .score-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        .score-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        .score-value {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        .score-value.grade-a { color: #28a745; }
-        .score-value.grade-b { color: #17a2b8; }
-        .score-value.grade-c { color: #ffc107; }
-        .score-value.grade-d { color: #fd7e14; }
-        .score-value.grade-f { color: #dc3545; }
-        .score-number {
-            font-size: 12px;
-            color: #999;
-        }
-        
-        /* 数据统计卡片样式 */
-        .stat-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            z-index: 1;
-        }
-        .stat-card > * {
-            position: relative;
-            z-index: 2;
-        }
-        .stat-title {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 10px;
-        }
-        .stat-current {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .stat-details {
-            font-size: 12px;
-            opacity: 0.8;
-            display: flex;
-            justify-content: space-between;
-        }
-        .stat-card:nth-child(1) {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .stat-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .stat-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .stat-card:nth-child(4) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        /* 动画效果 */
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
-        }
-        
-        /* 阈值超标时的图表高亮 */
-        .chart-wrapper.threshold-exceeded {
-            border: 3px solid #dc3545;
-            box-shadow: 0 0 15px rgba(220, 53, 69, 0.3);
-            animation: pulse 2s infinite;
-        }
-        
-        /* 内存泄漏检测样式 */
-        .leak-status, .leak-trend, .leak-rate, .leak-duration {
-            text-align: center;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-            border: 2px solid #e9ecef;
-        }
-        .status-label {
-            font-size: 14px;
-            color: #666;
-            margin-bottom: 8px;
-        }
-        .status-value {
-            font-size: 18px;
-            font-weight: bold;
-        }
-        .leak-warning {
-            background: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        .leak-warning.active {
-            background: #f8d7da;
-            border-color: #f5c6cb;
-            animation: pulse 2s infinite;
-        }
-        
-        /* 测试场景样式 */
-        .scenario-card {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        .scenario-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-        }
-        .scenario-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            z-index: 1;
-        }
-        .scenario-card > * {
-            position: relative;
-            z-index: 2;
-        }
-        .scenario-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
-        }
-        .scenario-desc {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-        }
-        .scenario-duration {
-            font-size: 12px;
-            opacity: 0.7;
-        }
-        .scenario-card:nth-child(1) {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-        .scenario-card:nth-child(2) {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-        }
-        .scenario-card:nth-child(3) {
-            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-        }
-        .scenario-card:nth-child(4) {
-            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-        }
-        
-        /* 当前测试场景样式 */
-        .current-scenario {
-            background: #e3f2fd;
-            border: 1px solid #2196f3;
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        .scenario-progress {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 15px 0;
-        }
-        .progress-bar {
-            flex: 1;
-            height: 8px;
-            background: #e0e0e0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #4caf50 0%, #2196f3 100%);
-            border-radius: 4px;
-            transition: width 0.3s ease;
-            width: 0%;
-        }
-        .btn-stop {
-            background: #f44336;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-        .btn-stop:hover {
-            background: #d32f2f;
-        }
         .form-group {
             margin-bottom: 15px;
         }
@@ -526,6 +266,294 @@
             left: -8px;
             font-size: 16px;
         }
+        
+        /* 性能阈值和告警样式 */
+        .alert-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .alert-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alert-item.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .alert-item.critical {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            animation: pulse 2s infinite;
+        }
+        
+        /* 性能评分样式 */
+        .score-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .score-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .score-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .score-value.grade-a { color: #28a745; }
+        .score-value.grade-b { color: #17a2b8; }
+        .score-value.grade-c { color: #ffc107; }
+        .score-value.grade-d { color: #fd7e14; }
+        .score-value.grade-f { color: #dc3545; }
+        .score-number {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* 统计面板样式 */
+        .stat-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+        .stat-current {
+            font-size: 24px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 8px;
+        }
+        .stat-details {
+            font-size: 11px;
+            color: #888;
+            line-height: 1.4;
+        }
+        
+        /* 内存泄漏检测样式 */
+        .leak-warning {
+            background: #f8d7da;
+            border: 2px solid #dc3545;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            display: none;
+        }
+        .leak-warning.active {
+            display: block;
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        
+        /* 拖拽功能样式 */
+        .controls {
+            position: relative;
+            cursor: move;
+            transition: transform 0.2s ease;
+        }
+        
+        .controls:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .controls.dragging {
+            opacity: 0.7;
+            transform: rotate(2deg);
+            z-index: 1000;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        
+        .controls h3 {
+            user-select: none;
+            position: relative;
+        }
+        
+        .controls h3::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+            font-size: 14px;
+            line-height: 1;
+        }
+        
+        .controls:hover h3::before {
+            color: #666;
+        }
+        
+        .drag-placeholder {
+            height: 100px;
+            background: linear-gradient(90deg, #e3f2fd, #f5f5f5);
+            border: 2px dashed #2196f3;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2196f3;
+            font-weight: bold;
+            opacity: 0.7;
+        }
+        
+        .drag-placeholder::before {
+            content: '释放到这里';
+        }
+        
+        /* 重置按钮样式 */
+        .header .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .header .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .header small {
+            opacity: 0.8;
+            font-style: italic;
+        }
+        
+        /* 分享对话框样式 */
+        .share-dialog {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+        
+        .share-dialog-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        
+        .share-url {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            position: relative;
+        }
+        
+        .copy-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: background 0.3s ease;
+        }
+        
+        .copy-btn:hover {
+            background: #218838;
+        }
+        
+        .copy-btn.copied {
+            background: #17a2b8;
+        }
+        
+        .close-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        
+        .close-btn:hover {
+            background: #5a6268;
+        }
+        
+        .share-tips {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 15px 0;
+            text-align: left;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .share-tips h4 {
+            margin: 0 0 10px 0;
+            color: #1976d2;
+        }
+        
+        .share-tips ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        
+        .share-tips li {
+            margin: 5px 0;
+        }
     </style>
 </head>
 <body>
@@ -533,13 +561,18 @@
         <div class="header">
             <h1>📱 iOS性能监控可视化</h1>
             <p>基于原始main.py逻辑的实时性能图表显示</p>
+            <div style="margin-top: 15px;">
+                <button class="btn" onclick="resetPanelOrder()" title="恢复面板默认顺序">🔄 重置面板顺序</button>
+                <button class="btn" onclick="showShareDialog()" title="获取分享链接">🔗 分享数据</button>
+                <small style="margin-left: 10px; color: #666;">💡 提示: 点击面板标题左侧的 ⋮⋮ 图标可拖拽调整顺序</small>
+            </div>
         </div>
 
         <div class="controls">
             <h3>🔧 监控配置</h3>
             <div class="form-group">
                 <label for="udid">设备UDID（可选）:</label>
-                <input type="text" id="udid" placeholder="留空使用默认设备">
+                <input type="text" id="udid" value="00008020-000A09960121002E" placeholder="留空使用默认设备">
             </div>
             <div class="form-group">
                 <label for="bundleId">应用Bundle ID:</label>
@@ -553,160 +586,6 @@
         </div>
 
         <div id="status" class="status hidden"></div>
-
-        <!-- 性能阈值设置 -->
-        <div class="controls" id="thresholdControls" style="display: none;">
-            <h3>⚠️ 性能阈值告警</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                <div>
-                    <label for="cpuThreshold">CPU告警阈值 (%):</label>
-                    <input type="number" id="cpuThreshold" min="0" max="100" value="80" style="width: 80px; padding: 4px;">
-                </div>
-                <div>
-                    <label for="memoryThreshold">内存告警阈值 (MB):</label>
-                    <input type="number" id="memoryThreshold" min="0" max="2048" value="500" style="width: 80px; padding: 4px;">
-                </div>
-                <div>
-                    <label for="fpsThreshold">FPS告警阈值:</label>
-                    <input type="number" id="fpsThreshold" min="0" max="120" value="30" style="width: 80px; padding: 4px;">
-                </div>
-                <div>
-                    <label for="threadsThreshold">线程数告警阈值:</label>
-                    <input type="number" id="threadsThreshold" min="0" max="200" value="50" style="width: 80px; padding: 4px;">
-                </div>
-            </div>
-            <div id="performanceAlerts" class="alert-panel" style="display: none;">
-                <h4>🚨 性能告警</h4>
-                <div id="alertList"></div>
-            </div>
-        </div>
-
-        <!-- 性能评分面板 -->
-        <div class="controls" id="scoringPanel" style="display: none;">
-            <h3>📊 实时性能评分</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
-                <div class="score-item">
-                    <div class="score-label">综合评分</div>
-                    <div class="score-value" id="overallScore">A+</div>
-                    <div class="score-number" id="overallScoreNumber">95</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">CPU性能</div>
-                    <div class="score-value" id="cpuScore">A</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">内存使用</div>
-                    <div class="score-value" id="memoryScore">A</div>
-                </div>
-                <div class="score-item">
-                    <div class="score-label">流畅度</div>
-                    <div class="score-value" id="fpsScore">B+</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- 内存泄漏检测面板 -->
-        <div class="controls" id="memoryLeakPanel" style="display: none;">
-            <h3>🔍 内存泄漏检测</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                <div class="leak-status">
-                    <div class="status-label">检测状态</div>
-                    <div class="status-value" id="leakStatus">正常</div>
-                </div>
-                <div class="leak-trend">
-                    <div class="status-label">内存趋势</div>
-                    <div class="status-value" id="memoryTrend">稳定</div>
-                </div>
-                <div class="leak-rate">
-                    <div class="status-label">增长率</div>
-                    <div class="status-value" id="leakRate">0 MB/min</div>
-                </div>
-                <div class="leak-duration">
-                    <div class="status-label">监控时长</div>
-                    <div class="status-value" id="monitorDuration">0分钟</div>
-                </div>
-            </div>
-            <div id="leakWarning" class="leak-warning" style="display: none;">
-                <h4>⚠️ 疑似内存泄漏</h4>
-                <div id="leakDetails"></div>
-            </div>
-        </div>
-
-        <!-- 测试场景面板 -->
-        <div class="controls" id="testScenariosPanel" style="display: none;">
-            <h3>🎯 测试场景</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
-                <div class="scenario-card" onclick="startScenario('app_launch')">
-                    <div class="scenario-title">📱 应用启动测试</div>
-                    <div class="scenario-desc">监控应用启动时的性能表现</div>
-                    <div class="scenario-duration">测试时长: 30秒</div>
-                </div>
-                <div class="scenario-card" onclick="startScenario('stability_test')">
-                    <div class="scenario-title">🔄 稳定性测试</div>
-                    <div class="scenario-desc">长时间运行稳定性检测</div>
-                    <div class="scenario-duration">测试时长: 10分钟</div>
-                </div>
-                <div class="scenario-card" onclick="startScenario('memory_stress')">
-                    <div class="scenario-title">💾 内存压力测试</div>
-                    <div class="scenario-desc">模拟高内存使用场景</div>
-                    <div class="scenario-duration">测试时长: 5分钟</div>
-                </div>
-                <div class="scenario-card" onclick="startScenario('fps_performance')">
-                    <div class="scenario-title">🎮 FPS性能测试</div>
-                    <div class="scenario-desc">检测帧率性能表现</div>
-                    <div class="scenario-duration">测试时长: 2分钟</div>
-                </div>
-            </div>
-            <div id="currentScenario" class="current-scenario" style="display: none;">
-                <h4>🔄 当前测试: <span id="scenarioName"></span></h4>
-                <div class="scenario-progress">
-                    <div class="progress-bar">
-                        <div class="progress-fill" id="scenarioProgress"></div>
-                    </div>
-                    <span id="scenarioTime">00:00 / 00:30</span>
-                </div>
-                <button onclick="stopCurrentScenario()" class="btn btn-stop">停止测试</button>
-            </div>
-        </div>
-
-        <!-- 数据统计面板 -->
-        <div class="controls" id="statisticsPanel" style="display: none;">
-            <h3>📈 数据统计</h3>
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
-                <div class="stat-card">
-                    <div class="stat-title">CPU使用率</div>
-                    <div class="stat-current" id="cpuCurrent">0%</div>
-                    <div class="stat-details">
-                        <span>平均: <span id="cpuAvg">0%</span></span>
-                        <span>最大: <span id="cpuMax">0%</span></span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">内存使用</div>
-                    <div class="stat-current" id="memoryCurrent">0MB</div>
-                    <div class="stat-details">
-                        <span>平均: <span id="memoryAvg">0MB</span></span>
-                        <span>最大: <span id="memoryMax">0MB</span></span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">帧率</div>
-                    <div class="stat-current" id="fpsCurrent">0fps</div>
-                    <div class="stat-details">
-                        <span>平均: <span id="fpsAvg">0fps</span></span>
-                        <span>最小: <span id="fpsMin">0fps</span></span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-title">线程数</div>
-                    <div class="stat-current" id="threadsCurrent">0</div>
-                    <div class="stat-details">
-                        <span>平均: <span id="threadsAvg">0</span></span>
-                        <span>最大: <span id="threadsMax">0</span></span>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 时间范围控制 -->
         <div class="controls" id="timeControls" style="display: none;">
@@ -754,6 +633,51 @@
                 <button class="btn" id="clearTagsBtn" onclick="clearAllTags()">清空所有标签</button>
             </div>
             <div class="scene-list" id="tagList"></div>
+        </div>
+
+        <!-- 测试场景自动化控制 -->
+        <div class="controls" id="scenarioControls" style="display: none;">
+            <h3>🧪 测试场景自动化</h3>
+            <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 15px; border-radius: 6px;">
+                <div style="font-size: 14px; color: #1976d2; margin-bottom: 8px;">
+                    <strong>💡 智能测试助手</strong>
+                </div>
+                <div style="font-size: 13px; color: #424242; line-height: 1.4;">
+                    在性能监控运行时，可以启动自动化测试场景，系统将自动执行测试操作并在图表上标记关键时间点
+                </div>
+            </div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                <div>
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">测试场景类型:</label>
+                    <select id="scenarioType" style="width: 100%; padding: 8px; border: 1px solid #d2d2d7; border-radius: 6px;">
+                        <option value="app_launch">应用启动测试</option>
+                        <option value="memory_stress">内存压力测试</option>
+                        <option value="ui_interaction">界面交互测试</option>
+                        <option value="background_switch">后台切换测试</option>
+                    </select>
+                </div>
+                <div style="display: flex; align-items: end; gap: 10px;">
+                    <button class="btn" id="startScenarioBtn" onclick="startTestScenario()" disabled>🚀 开始测试</button>
+                    <button class="btn" id="stopScenarioBtn" onclick="stopTestScenario()" disabled style="background: #dc3545;">⏹️ 停止测试</button>
+                </div>
+            </div>
+            
+            <!-- 测试状态和进度显示 -->
+            <div id="scenarioStatus" style="display: none; background: #f8f9fa; border-radius: 6px; padding: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <span id="scenarioStatusIcon">🔄</span>
+                    <span id="scenarioStatusText">准备中...</span>
+                </div>
+                <div style="background: #e9ecef; border-radius: 3px; height: 6px; overflow: hidden;">
+                    <div id="scenarioProgress" style="background: #28a745; height: 100%; width: 0%; transition: width 0.3s ease;"></div>
+                </div>
+            </div>
+            
+            <!-- 测试结果和日志 -->
+            <div id="scenarioResults" style="display: none;">
+                <h4 style="margin: 15px 0 10px 0; color: #1d1d1f;">📋 测试日志</h4>
+                <div id="scenarioLog" style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 10px; max-height: 200px; overflow-y: auto; font-family: 'Courier New', monospace; font-size: 13px; line-height: 1.4;"></div>
+            </div>
         </div>
 
         <div class="current-values" id="currentValues" style="display: none;">
@@ -805,6 +729,149 @@
                 </div>
             </div>
         </div>
+
+        <!-- 性能阈值控制面板 -->
+        <div class="controls" id="thresholdControls">
+            <h3>🚨 性能阈值告警</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <label>CPU阈值 (%):</label>
+                    <input type="number" id="cpuThreshold" value="80" min="0" max="100">
+                </div>
+                <div>
+                    <label>内存阈值 (MB):</label>
+                    <input type="number" id="memoryThreshold" value="200" min="0">
+                </div>
+                <div>
+                    <label>FPS最低值:</label>
+                    <input type="number" id="fpsThreshold" value="30" min="0" max="60">
+                </div>
+                <div>
+                    <label>线程数上限:</label>
+                    <input type="number" id="threadsThreshold" value="50" min="0">
+                </div>
+            </div>
+            <div id="alertPanel" class="alert-panel" style="display: none;">
+                <h4>⚠️ 性能告警</h4>
+                <div id="alertList"></div>
+            </div>
+        </div>
+
+        <!-- 性能评分面板 -->
+        <div class="controls" id="scoringPanel">
+            <h3>📊 实时性能评分</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                <div class="score-item">
+                    <div class="score-label">CPU评分</div>
+                    <div class="score-value" id="cpuScore">A+</div>
+                    <div class="score-number" id="cpuScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">内存评分</div>
+                    <div class="score-value" id="memoryScore">A+</div>
+                    <div class="score-number" id="memoryScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">FPS评分</div>
+                    <div class="score-value" id="fpsScore">A+</div>
+                    <div class="score-number" id="fpsScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">总体评分</div>
+                    <div class="score-value" id="overallScore">A+</div>
+                    <div class="score-number" id="overallScoreNum">(95)</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 内存泄漏检测面板 -->
+        <div class="controls" id="memoryLeakPanel">
+            <h3>🧠 内存泄漏检测</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div class="stat-card">
+                    <div class="stat-label">检测状态</div>
+                    <div class="stat-value" id="leakStatus">正常</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">内存趋势</div>
+                    <div class="stat-value" id="memoryTrend">稳定</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">增长率</div>
+                    <div class="stat-value" id="leakRate">0 MB/min</div>
+                </div>
+            </div>
+            <div class="leak-warning" id="leakWarning" style="display: none;">
+                <h4>⚠️ 疑似内存泄漏</h4>
+                <div id="leakDetails"></div>
+            </div>
+        </div>
+
+        <!-- 数据统计面板 -->
+        <div class="controls" id="statisticsPanel">
+            <h3>📈 数据统计</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                <div class="stat-card">
+                    <div class="stat-label">CPU使用率</div>
+                    <div class="stat-current" id="statCpuCurrent">0%</div>
+                    <div class="stat-details">
+                        平均: <span id="statCpuAvg">0%</span> | 
+                        最大: <span id="statCpuMax">0%</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">内存使用</div>
+                    <div class="stat-current" id="statMemoryCurrent">0MB</div>
+                    <div class="stat-details">
+                        平均: <span id="statMemoryAvg">0MB</span> | 
+                        最大: <span id="statMemoryMax">0MB</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">帧率</div>
+                    <div class="stat-current" id="statFpsCurrent">0FPS</div>
+                    <div class="stat-details">
+                        平均: <span id="statFpsAvg">0FPS</span> | 
+                        最低: <span id="statFpsMin">0FPS</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">线程数</div>
+                    <div class="stat-current" id="statThreadsCurrent">0</div>
+                    <div class="stat-details">
+                        平均: <span id="statThreadsAvg">0</span> | 
+                        最大: <span id="statThreadsMax">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 分享对话框 -->
+    <div id="shareDialog" class="share-dialog">
+        <div class="share-dialog-content">
+            <h3>🔗 分享实时数据</h3>
+            <p>将以下链接分享给其他人，他们可以实时查看你的性能监控数据：</p>
+            
+            <div class="share-url" id="shareUrl">
+                正在获取分享链接...
+            </div>
+            
+            <div>
+                <button class="copy-btn" onclick="copyShareUrl()">📋 复制链接</button>
+                <button class="close-btn" onclick="closeShareDialog()">关闭</button>
+            </div>
+            
+            <div class="share-tips">
+                <h4>💡 使用说明：</h4>
+                <ul>
+                    <li>确保分享对象与你在同一网络环境中（如同一WiFi）</li>
+                    <li>如果无法访问，可能需要关闭防火墙或允许端口5001</li>
+                    <li>分享的是实时数据，他们能看到你当前的性能监控状态</li>
+                    <li>停止监控后，分享的页面也会停止更新</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -814,37 +881,117 @@
         // 图表实例
         let cpuChart, memoryChart, fpsChart, threadsChart;
         
-        // 性能分析全局变量
-        let performanceStats = {
-            cpu: { values: [], sum: 0, max: 0, min: 100, avg: 0 },
-            memory: { values: [], sum: 0, max: 0, min: Infinity, avg: 0 },
-            fps: { values: [], sum: 0, max: 0, min: Infinity, avg: 0 },
-            threads: { values: [], sum: 0, max: 0, min: Infinity, avg: 0 }
-        };
-        
-        let activeAlerts = new Set();
-        let lastAlertCheck = 0;
-        
-        // 内存泄漏检测变量
-        let memoryLeakDetection = {
-            startTime: null,
-            initialMemory: 0,
-            memoryHistory: [],
-            leakThreshold: 2, // MB/min
-            detectionWindow: 300000, // 5分钟检测窗口
-            isLeaking: false
-        };
-        
-        // 测试场景变量
-        let currentTestScenario = null;
-        let scenarioStartTime = null;
-        let scenarioTimer = null;
-        
         // 数据存储
         let isMonitoring = false;
         let windowSize = 50; // 显示窗口大小
         let timePosition = 100; // 时间位置百分比，100表示最新
         let allPerformanceData = []; // 存储所有性能数据用于保存
+        
+        // 性能阈值配置
+        let thresholds = {
+            cpu: 80,
+            memory: 200,
+            fps: 30,
+            threads: 50
+        };
+        
+        // 性能统计数据
+        let performanceStats = {
+            cpu: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
+            memory: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
+            fps: { current: 0, avg: 0, min: Infinity, sum: 0, count: 0 },
+            threads: { current: 0, avg: 0, max: 0, sum: 0, count: 0 }
+        };
+        
+        // 专业级内存泄漏检测系统
+        let professionalMemoryLeakDetection = {
+            // 场景状态机
+            sceneStateMachine: {
+                currentScene: 'unknown',
+                previousScene: 'unknown',
+                sceneHistory: [],
+                sceneStartTime: null,
+                sceneStartMemory: 0,
+                sceneTransitionCount: 0
+            },
+            
+            // 场景定义和基线
+            sceneProfiles: {
+                'idle': { 
+                    name: '空闲状态', 
+                    expectedMemory: { min: 80, max: 150 }, 
+                    color: '#4CAF50',
+                    priority: 1 
+                },
+                'launching': { 
+                    name: '应用启动', 
+                    expectedMemory: { min: 120, max: 200 }, 
+                    color: '#FF9800',
+                    priority: 3 
+                },
+                'video_playing': { 
+                    name: '视频播放', 
+                    expectedMemory: { min: 200, max: 400 }, 
+                    color: '#F44336',
+                    priority: 4 
+                },
+                'navigation': { 
+                    name: '界面导航', 
+                    expectedMemory: { min: 100, max: 180 }, 
+                    color: '#2196F3',
+                    priority: 2 
+                },
+                'background': { 
+                    name: '后台运行', 
+                    expectedMemory: { min: 60, max: 120 }, 
+                    color: '#9C27B0',
+                    priority: 1 
+                }
+            },
+            
+            // 内存历史数据
+            memoryHistory: [],
+            maxHistoryLength: 200,
+            
+            // 检测参数
+            detection: {
+                minSampleSize: 15,              // 最小样本数量
+                sceneMinDuration: 10000,        // 场景最小持续时间 (10秒)
+                leakThreshold: 0.85,            // 内存回收率阈值 (85%)
+                anomalyThreshold: 2.5,          // 异常检测标准差倍数
+                trendAnalysisWindow: 30,        // 趋势分析窗口大小
+                gcDetectionThreshold: 15        // GC检测阈值 (MB)
+            },
+            
+            // 检测状态
+            status: {
+                isLeaking: false,
+                leakLevel: 'none',              // none, mild, moderate, severe
+                leakSources: [],
+                lastGCTime: null,
+                gcFrequency: 0,
+                suspiciousTransitions: []
+            },
+            
+            // 统计数据
+            statistics: {
+                totalLeaksDetected: 0,
+                falsePositiveRate: 0,
+                averageRecoveryRate: 0,
+                sceneTransitionMatrix: {}
+            }
+        };
+        
+        // 兼容旧系统
+        let memoryLeakDetection = {
+            memoryHistory: [],
+            leakThreshold: 2,
+            detectionWindow: 300000,
+            isLeaking: false
+        };
+        
+        // 活跃告警列表
+        let activeAlerts = [];
         let allTimeLabels = []; // 存储所有时间标签
         let allCpuData = []; // 存储所有CPU数据
         let allMemoryData = []; // 存储所有内存数据
@@ -1037,454 +1184,6 @@
                 updateAllTagMarkers();
                 updateTagList(); // 更新标签列表状态
             }
-        }
-
-        // 更新性能统计数据
-        function updatePerformanceStats(cpu, memory, fps, threads) {
-            // 更新CPU统计
-            updateStat('cpu', cpu);
-            updateStat('memory', memory);
-            updateStat('fps', fps);
-            updateStat('threads', threads);
-            
-            // 更新UI显示
-            updateStatisticsDisplay();
-            updatePerformanceScoring();
-            checkPerformanceThresholds(cpu, memory, fps, threads);
-            updateMemoryLeakDetection(memory);
-        }
-
-        function updateStat(metric, value) {
-            const stat = performanceStats[metric];
-            stat.values.push(value);
-            stat.sum += value;
-            stat.max = Math.max(stat.max, value);
-            stat.min = Math.min(stat.min, value);
-            stat.avg = stat.sum / stat.values.length;
-            
-            // 保持最近1000个数据点
-            if (stat.values.length > 1000) {
-                const removed = stat.values.shift();
-                stat.sum -= removed;
-                stat.avg = stat.sum / stat.values.length;
-            }
-        }
-
-        // 更新统计面板显示
-        function updateStatisticsDisplay() {
-            // CPU统计
-            document.getElementById('cpuCurrent').textContent = `${performanceStats.cpu.values[performanceStats.cpu.values.length - 1] || 0}%`;
-            document.getElementById('cpuAvg').textContent = `${performanceStats.cpu.avg.toFixed(1)}%`;
-            document.getElementById('cpuMax').textContent = `${performanceStats.cpu.max}%`;
-            
-            // 内存统计
-            document.getElementById('memoryCurrent').textContent = `${(performanceStats.memory.values[performanceStats.memory.values.length - 1] || 0).toFixed(1)}MB`;
-            document.getElementById('memoryAvg').textContent = `${performanceStats.memory.avg.toFixed(1)}MB`;
-            document.getElementById('memoryMax').textContent = `${performanceStats.memory.max.toFixed(1)}MB`;
-            
-            // FPS统计
-            document.getElementById('fpsCurrent').textContent = `${Math.round(performanceStats.fps.values[performanceStats.fps.values.length - 1] || 0)}fps`;
-            document.getElementById('fpsAvg').textContent = `${performanceStats.fps.avg.toFixed(1)}fps`;
-            document.getElementById('fpsMin').textContent = `${performanceStats.fps.min === Infinity ? 0 : performanceStats.fps.min.toFixed(1)}fps`;
-            
-            // 线程统计
-            document.getElementById('threadsCurrent').textContent = `${performanceStats.threads.values[performanceStats.threads.values.length - 1] || 0}`;
-            document.getElementById('threadsAvg').textContent = `${performanceStats.threads.avg.toFixed(1)}`;
-            document.getElementById('threadsMax').textContent = `${performanceStats.threads.max}`;
-        }
-
-        // 性能评分系统
-        function updatePerformanceScoring() {
-            const scores = calculatePerformanceScores();
-            
-            // 更新UI显示
-            updateScoreDisplay('cpuScore', scores.cpu);
-            updateScoreDisplay('memoryScore', scores.memory);
-            updateScoreDisplay('fpsScore', scores.fps);
-            
-            // 计算综合评分
-            const overallScore = (scores.cpu.score + scores.memory.score + scores.fps.score) / 3;
-            const overallGrade = getGradeFromScore(overallScore);
-            
-            document.getElementById('overallScore').textContent = overallGrade;
-            document.getElementById('overallScore').className = 'score-value ' + getGradeClass(overallGrade);
-            document.getElementById('overallScoreNumber').textContent = Math.round(overallScore);
-        }
-
-        function calculatePerformanceScores() {
-            const cpu = performanceStats.cpu.avg;
-            const memory = performanceStats.memory.avg;
-            const fps = performanceStats.fps.avg;
-            
-            return {
-                cpu: {
-                    score: Math.max(0, 100 - cpu), // CPU使用率越低越好
-                    grade: cpu < 20 ? 'A+' : cpu < 40 ? 'A' : cpu < 60 ? 'B+' : cpu < 80 ? 'B' : 'C'
-                },
-                memory: {
-                    score: Math.max(0, 100 - (memory / 10)), // 内存使用量评分
-                    grade: memory < 200 ? 'A+' : memory < 400 ? 'A' : memory < 600 ? 'B+' : memory < 800 ? 'B' : 'C'
-                },
-                fps: {
-                    score: Math.min(100, fps * 2), // FPS越高越好
-                    grade: fps >= 55 ? 'A+' : fps >= 45 ? 'A' : fps >= 35 ? 'B+' : fps >= 25 ? 'B' : 'C'
-                }
-            };
-        }
-
-        function updateScoreDisplay(elementId, scoreData) {
-            const element = document.getElementById(elementId);
-            element.textContent = scoreData.grade;
-            element.className = 'score-value ' + getGradeClass(scoreData.grade);
-        }
-
-        function getGradeFromScore(score) {
-            if (score >= 90) return 'A+';
-            if (score >= 80) return 'A';
-            if (score >= 70) return 'B+';
-            if (score >= 60) return 'B';
-            if (score >= 50) return 'C';
-            return 'D';
-        }
-
-        function getGradeClass(grade) {
-            if (grade.includes('A')) return 'grade-a';
-            if (grade.includes('B')) return 'grade-b';
-            if (grade.includes('C')) return 'grade-c';
-            if (grade.includes('D')) return 'grade-d';
-            return 'grade-f';
-        }
-
-        // 性能阈值检查和告警
-        function checkPerformanceThresholds(cpu, memory, fps, threads) {
-            const now = Date.now();
-            if (now - lastAlertCheck < 2000) return; // 限制检查频率
-            lastAlertCheck = now;
-            
-            const thresholds = {
-                cpu: parseInt(document.getElementById('cpuThreshold').value),
-                memory: parseInt(document.getElementById('memoryThreshold').value),
-                fps: parseInt(document.getElementById('fpsThreshold').value),
-                threads: parseInt(document.getElementById('threadsThreshold').value)
-            };
-            
-            const alerts = [];
-            
-            // CPU检查
-            if (cpu > thresholds.cpu) {
-                alerts.push({
-                    type: 'critical',
-                    metric: 'CPU',
-                    value: cpu,
-                    threshold: thresholds.cpu,
-                    message: `CPU使用率过高: ${cpu}% (阈值: ${thresholds.cpu}%)`
-                });
-                highlightChart('cpu', true);
-            } else {
-                highlightChart('cpu', false);
-            }
-            
-            // 内存检查
-            if (memory > thresholds.memory) {
-                alerts.push({
-                    type: 'critical',
-                    metric: '内存',
-                    value: memory.toFixed(1),
-                    threshold: thresholds.memory,
-                    message: `内存使用过高: ${memory.toFixed(1)}MB (阈值: ${thresholds.memory}MB)`
-                });
-                highlightChart('memory', true);
-            } else {
-                highlightChart('memory', false);
-            }
-            
-            // FPS检查
-            if (fps < thresholds.fps) {
-                alerts.push({
-                    type: 'warning',
-                    metric: 'FPS',
-                    value: fps,
-                    threshold: thresholds.fps,
-                    message: `帧率过低: ${fps}fps (阈值: ${thresholds.fps}fps)`
-                });
-                highlightChart('fps', true);
-            } else {
-                highlightChart('fps', false);
-            }
-            
-            // 线程数检查
-            if (threads > thresholds.threads) {
-                alerts.push({
-                    type: 'warning',
-                    metric: '线程',
-                    value: threads,
-                    threshold: thresholds.threads,
-                    message: `线程数过多: ${threads} (阈值: ${thresholds.threads})`
-                });
-                highlightChart('threads', true);
-            } else {
-                highlightChart('threads', false);
-            }
-            
-            updateAlertDisplay(alerts);
-        }
-
-        function highlightChart(chartType, highlight) {
-            const chartWrapper = document.querySelector(`[data-chart="${chartType}"]`);
-            if (chartWrapper) {
-                if (highlight) {
-                    chartWrapper.classList.add('threshold-exceeded');
-                } else {
-                    chartWrapper.classList.remove('threshold-exceeded');
-                }
-            }
-        }
-
-        function updateAlertDisplay(alerts) {
-            const alertPanel = document.getElementById('performanceAlerts');
-            const alertList = document.getElementById('alertList');
-            
-            if (alerts.length > 0) {
-                alertPanel.style.display = 'block';
-                alertList.innerHTML = alerts.map(alert => `
-                    <div class="alert-item ${alert.type}">
-                        <span>${alert.message}</span>
-                        <span>${new Date().toLocaleTimeString()}</span>
-                    </div>
-                `).join('');
-            } else {
-                alertPanel.style.display = 'none';
-            }
-        }
-
-        // 内存泄漏检测功能
-        function updateMemoryLeakDetection(currentMemory) {
-            const now = Date.now();
-            
-            // 初始化检测
-            if (!memoryLeakDetection.startTime) {
-                memoryLeakDetection.startTime = now;
-                memoryLeakDetection.initialMemory = currentMemory;
-                updateMonitorDuration();
-                return;
-            }
-            
-            // 更新监控时长
-            updateMonitorDuration();
-            
-            // 添加到历史记录
-            memoryLeakDetection.memoryHistory.push({
-                time: now,
-                memory: currentMemory
-            });
-            
-            // 保持最近5分钟的数据
-            const cutoffTime = now - memoryLeakDetection.detectionWindow;
-            memoryLeakDetection.memoryHistory = memoryLeakDetection.memoryHistory.filter(
-                record => record.time > cutoffTime
-            );
-            
-            // 内存泄漏分析
-            analyzeMemoryLeak();
-        }
-
-        function updateMonitorDuration() {
-            if (!memoryLeakDetection.startTime) return;
-            
-            const duration = Date.now() - memoryLeakDetection.startTime;
-            const minutes = Math.floor(duration / 60000);
-            const seconds = Math.floor((duration % 60000) / 1000);
-            document.getElementById('monitorDuration').textContent = `${minutes}分${seconds}秒`;
-        }
-
-        function analyzeMemoryLeak() {
-            const history = memoryLeakDetection.memoryHistory;
-            if (history.length < 10) return; // 需要足够的数据点
-            
-            // 计算内存增长趋势
-            const recent = history.slice(-10); // 最近10个数据点
-            const older = history.slice(0, 10); // 较早的10个数据点
-            
-            if (older.length === 0) return;
-            
-            const recentAvg = recent.reduce((sum, item) => sum + item.memory, 0) / recent.length;
-            const olderAvg = older.reduce((sum, item) => sum + item.memory, 0) / older.length;
-            
-            const memoryIncrease = recentAvg - olderAvg;
-            const timeSpan = (recent[recent.length - 1].time - older[0].time) / 60000; // 分钟
-            const leakRate = timeSpan > 0 ? memoryIncrease / timeSpan : 0;
-            
-            // 更新UI
-            document.getElementById('leakRate').textContent = `${leakRate.toFixed(2)} MB/min`;
-            
-            // 判断内存趋势
-            let trend, status;
-            if (leakRate > memoryLeakDetection.leakThreshold) {
-                trend = '持续增长';
-                status = '疑似泄漏';
-                memoryLeakDetection.isLeaking = true;
-                showMemoryLeakWarning(leakRate, memoryIncrease);
-            } else if (leakRate > 0.5) {
-                trend = '缓慢增长';
-                status = '需要观察';
-                memoryLeakDetection.isLeaking = false;
-                hideMemoryLeakWarning();
-            } else if (leakRate < -0.5) {
-                trend = '下降';
-                status = '正常';
-                memoryLeakDetection.isLeaking = false;
-                hideMemoryLeakWarning();
-            } else {
-                trend = '稳定';
-                status = '正常';
-                memoryLeakDetection.isLeaking = false;
-                hideMemoryLeakWarning();
-            }
-            
-            document.getElementById('memoryTrend').textContent = trend;
-            document.getElementById('leakStatus').textContent = status;
-            
-            // 更新状态颜色
-            const statusEl = document.getElementById('leakStatus');
-            statusEl.style.color = status === '疑似泄漏' ? '#dc3545' : status === '需要观察' ? '#ffc107' : '#28a745';
-        }
-
-        function showMemoryLeakWarning(leakRate, totalIncrease) {
-            const warningEl = document.getElementById('leakWarning');
-            const detailsEl = document.getElementById('leakDetails');
-            
-            warningEl.style.display = 'block';
-            warningEl.classList.add('active');
-            
-            detailsEl.innerHTML = `
-                <p>检测到持续的内存增长模式:</p>
-                <ul>
-                    <li>增长率: ${leakRate.toFixed(2)} MB/分钟</li>
-                    <li>总增长: ${totalIncrease.toFixed(1)} MB</li>
-                    <li>建议: 检查代码中的内存释放</li>
-                </ul>
-            `;
-        }
-
-        function hideMemoryLeakWarning() {
-            const warningEl = document.getElementById('leakWarning');
-            warningEl.style.display = 'none';
-            warningEl.classList.remove('active');
-        }
-
-        // 测试场景功能
-        function startScenario(scenarioType) {
-            if (currentTestScenario) {
-                alert('已有测试场景在运行中，请先停止当前测试');
-                return;
-            }
-            
-            const scenarios = {
-                'app_launch': { name: '应用启动测试', duration: 30 },
-                'stability_test': { name: '稳定性测试', duration: 600 },
-                'memory_stress': { name: '内存压力测试', duration: 300 },
-                'fps_performance': { name: 'FPS性能测试', duration: 120 }
-            };
-            
-            const scenario = scenarios[scenarioType];
-            if (!scenario) return;
-            
-            currentTestScenario = {
-                type: scenarioType,
-                name: scenario.name,
-                duration: scenario.duration,
-                startTime: Date.now()
-            };
-            
-            // 重置性能统计
-            resetPerformanceStats();
-            
-            // 显示当前测试界面
-            document.getElementById('currentScenario').style.display = 'block';
-            document.getElementById('scenarioName').textContent = scenario.name;
-            
-            // 启动定时器
-            updateScenarioProgress();
-            scenarioTimer = setInterval(updateScenarioProgress, 1000);
-            
-            showStatus(`开始${scenario.name}`, 'info');
-        }
-
-        function updateScenarioProgress() {
-            if (!currentTestScenario) return;
-            
-            const elapsed = (Date.now() - currentTestScenario.startTime) / 1000;
-            const progress = Math.min(100, (elapsed / currentTestScenario.duration) * 100);
-            
-            document.getElementById('scenarioProgress').style.width = `${progress}%`;
-            
-            const elapsedMin = Math.floor(elapsed / 60);
-            const elapsedSec = Math.floor(elapsed % 60);
-            const totalMin = Math.floor(currentTestScenario.duration / 60);
-            const totalSec = currentTestScenario.duration % 60;
-            
-            document.getElementById('scenarioTime').textContent = 
-                `${elapsedMin.toString().padStart(2, '0')}:${elapsedSec.toString().padStart(2, '0')} / ${totalMin.toString().padStart(2, '0')}:${totalSec.toString().padStart(2, '0')}`;
-            
-            // 测试完成
-            if (elapsed >= currentTestScenario.duration) {
-                stopCurrentScenario();
-                generateScenarioReport();
-            }
-        }
-
-        function stopCurrentScenario() {
-            if (scenarioTimer) {
-                clearInterval(scenarioTimer);
-                scenarioTimer = null;
-            }
-            
-            if (currentTestScenario) {
-                showStatus(`${currentTestScenario.name}已完成`, 'success');
-            }
-            
-            currentTestScenario = null;
-            document.getElementById('currentScenario').style.display = 'none';
-        }
-
-        function generateScenarioReport() {
-            if (!currentTestScenario) return;
-            
-            const report = {
-                scenarioName: currentTestScenario.name,
-                duration: currentTestScenario.duration,
-                averageCpu: performanceStats.cpu.avg.toFixed(1),
-                maxCpu: performanceStats.cpu.max,
-                averageMemory: performanceStats.memory.avg.toFixed(1),
-                maxMemory: performanceStats.memory.max.toFixed(1),
-                averageFps: performanceStats.fps.avg.toFixed(1),
-                minFps: performanceStats.fps.min === Infinity ? 0 : performanceStats.fps.min.toFixed(1),
-                performanceScore: calculateOverallScore()
-            };
-            
-            // 这里可以弹窗显示报告或者保存到文件
-            alert(`测试报告:\n` +
-                  `场景: ${report.scenarioName}\n` +
-                  `平均CPU: ${report.averageCpu}%\n` +
-                  `平均内存: ${report.averageMemory}MB\n` +
-                  `平均FPS: ${report.averageFps}\n` +
-                  `性能评分: ${report.performanceScore}`);
-        }
-
-        function calculateOverallScore() {
-            const scores = calculatePerformanceScores();
-            return Math.round((scores.cpu.score + scores.memory.score + scores.fps.score) / 3);
-        }
-
-        function resetPerformanceStats() {
-            Object.keys(performanceStats).forEach(key => {
-                performanceStats[key] = { values: [], sum: 0, max: 0, min: key === 'cpu' ? 100 : Infinity, avg: 0 };
-            });
-            
-            // 重置内存泄漏检测
-            memoryLeakDetection.startTime = null;
-            memoryLeakDetection.memoryHistory = [];
-            memoryLeakDetection.isLeaking = false;
         }
 
         // 显示状态消息
@@ -1740,6 +1439,7 @@
                     document.getElementById('timeControls').style.display = 'block';
                     document.getElementById('sceneControls').style.display = 'block';
                     document.getElementById('tagControls').style.display = 'block';
+                    document.getElementById('scenarioControls').style.display = 'block';
                     initCharts();
                     enableDoubleClickTags(); // 启用双击标签功能
 
@@ -1756,26 +1456,32 @@
                     // 批量添加导入的数据
                     let dataCount = 0;
                     importedData.data.forEach(item => {
-                        if (item.type === 'performance') {
-                            addDataToChart(cpuChart, item.time, item.cpu);
-                            addDataToChart(memoryChart, item.time, item.memory);
-                            addDataToChart(threadsChart, item.time, item.threads);
+                        // 兼容不同的数据格式
+                        const timeValue = item.time || item.timestamp;
+                        const hasPerformanceData = item.cpu !== undefined || item.memory !== undefined;
+                        
+                        if (hasPerformanceData || item.type === 'performance') {
+                            // 确保数据完整性
+                            const cpu = item.cpu || 0;
+                            const memory = item.memory || 0;
+                            const threads = item.threads || 0;
+                            const fps = item.fps || 0;
                             
-                            // 如果有FPS数据也添加到FPS图表
-                            if (item.fps !== null && item.fps !== undefined) {
-                                addDataToChart(fpsChart, item.time, item.fps);
-                                document.getElementById('currentFps').textContent = `${item.fps}FPS`;
-                            }
+                            addDataToChart(cpuChart, timeValue, cpu);
+                            addDataToChart(memoryChart, timeValue, memory);
+                            addDataToChart(threadsChart, timeValue, threads);
+                            addDataToChart(fpsChart, timeValue, fps);
                             
                             // 更新当前值显示
-                            document.getElementById('currentCpu').textContent = `${item.cpu}%`;
-                            document.getElementById('currentMemory').textContent = `${item.memory.toFixed(1)}MB`;
-                            document.getElementById('currentThreads').textContent = item.threads;
+                            document.getElementById('currentCpu').textContent = `${cpu}%`;
+                            document.getElementById('currentMemory').textContent = `${memory.toFixed(1)}MB`;
+                            document.getElementById('currentThreads').textContent = threads;
+                            document.getElementById('currentFps').textContent = `${fps}FPS`;
+                            
+                            // 更新性能统计分析
+                            updatePerformanceStats(cpu, memory, fps, threads);
+                            
                             dataCount++;
-                        } else if (item.type === 'fps') {
-                            // 向后兼容：处理旧格式的单独FPS数据
-                            addDataToChart(fpsChart, item.time, item.fps);
-                            document.getElementById('currentFps').textContent = `${item.fps}FPS`;
                         }
                     });
 
@@ -1802,6 +1508,9 @@
                     }
                     statusMessage += `，来自 ${importedData.timestamp}`;
                     showStatus(statusMessage, 'success');
+                    
+                    // 更新最终的性能评分
+                    updatePerformanceScores();
                     
                 } catch (error) {
                     showStatus('文件解析失败: ' + error.message, 'error');
@@ -1860,12 +1569,11 @@
 
         // 停止监控
         function stopMonitoring() {
-            if (!isMonitoring) return;
-            
-            // 发送停止信号到后端
-            socket.emit('stop_monitoring');
-            
-            showStatus('正在停止监控...', 'info');
+            isMonitoring = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            showStatus('监控已停止', 'info');
+            // 保持图表显示，不隐藏
         }
 
         // Socket.IO事件处理
@@ -2021,13 +1729,13 @@
 
         function generateSceneSummary(sceneData) {
             const perfData = sceneData.filter(item => item.type === 'performance');
-            const fpsData = sceneData.filter(item => item.type === 'fps');
+            //const fpsData = sceneData.filter(item => item.type === 'fps');
             
             if (perfData.length === 0) return {};
             
             const cpuValues = perfData.map(item => item.cpu);
             const memoryValues = perfData.map(item => item.memory);
-            const fpsValues = fpsData.map(item => item.fps);
+            const fpsValues = perfData.map(item => item.fps);
             
             return {
                 duration: perfData.length,
@@ -2140,33 +1848,15 @@
 
         socket.on('monitoring_started', function(data) {
             if (data.status === 'success') {
-                isMonitoring = true;
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('stopBtn').disabled = false;
-                document.getElementById('saveBtn').disabled = false;
                 showStatus('监控已启动，正在收集数据...', 'success');
                 document.getElementById('chartsGrid').style.display = 'grid';
                 document.getElementById('currentValues').style.display = 'grid';
-                document.getElementById('thresholdControls').style.display = 'block';
-                document.getElementById('scoringPanel').style.display = 'block';
-                document.getElementById('memoryLeakPanel').style.display = 'block';
-                document.getElementById('testScenariosPanel').style.display = 'block';
-                document.getElementById('statisticsPanel').style.display = 'block';
                 document.getElementById('timeControls').style.display = 'block';
                 document.getElementById('sceneControls').style.display = 'block';
                 document.getElementById('tagControls').style.display = 'block';
+                document.getElementById('scenarioControls').style.display = 'block';
                 initCharts();
                 enableDoubleClickTags(); // 启用双击标签功能
-            }
-        });
-
-        socket.on('monitoring_stopped', function(data) {
-            if (data.status === 'success') {
-                isMonitoring = false;
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('stopBtn').disabled = true;
-                document.getElementById('saveBtn').disabled = true;
-                showStatus('监控已停止', 'success');
             }
         });
 
@@ -2180,36 +1870,56 @@
                 time: data.time,
                 cpu: data.cpu,
                 memory: data.memory,
-                threads: data.threads,
                 fps: data.fps,
+                threads: data.threads,
                 pid: data.pid,
                 name: data.name
             });
-            
+
             // 更新当前值显示
             document.getElementById('currentCpu').textContent = `${data.cpu}%`;
             document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
             document.getElementById('currentThreads').textContent = data.threads;
-            
-            // 更新FPS显示（如果有FPS数据）
-            if (data.fps !== null && data.fps !== undefined) {
-                document.getElementById('currentFps').textContent = `${data.fps}FPS`;
-            }
+            // 更新当前FPS显示
+            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
             
             // 添加数据到图表
             addDataToChart(cpuChart, data.time, data.cpu);
             addDataToChart(memoryChart, data.time, data.memory);
             addDataToChart(threadsChart, data.time, data.threads);
-            
-            // 添加FPS数据到图表（如果有FPS数据）
-            if (data.fps !== null && data.fps !== undefined) {
-                addDataToChart(fpsChart, data.time, data.fps);
-            }
+            // 添加FPS数据到图表
+            addDataToChart(fpsChart, data.time, data.fps);
             
             // 更新性能统计分析
             updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads);
+            
+            // 检查性能阈值告警
+            checkPerformanceThresholds(data.cpu, data.memory, data.fps || 0, data.threads);
+            
+            // 专业级内存泄漏检测 (传递所有性能参数)
+            detectMemoryLeak(data.memory, data.cpu, data.fps || 0, data.threads);
+            
+            // 更新实时评分
+            updatePerformanceScores();
         });
 
+        /*socket.on('fps_data', function(data) {
+            if (!isMonitoring) return;
+
+            // 保存到allPerformanceData用于导出
+            allPerformanceData.push({
+                type: 'fps',
+                timestamp: new Date().toISOString(),
+                time: data.time,
+                fps: data.fps
+            });
+
+            // 更新当前FPS显示
+            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
+
+            // 添加FPS数据到图表
+            addDataToChart(fpsChart, data.time, data.fps);
+        });*/
 
         socket.on('connect', function() {
             console.log('已连接到服务器');
@@ -2222,9 +1932,1183 @@
             }
         });
 
+        // 性能统计更新函数
+        function updatePerformanceStats(cpu, memory, fps, threads) {
+            // 更新CPU统计
+            performanceStats.cpu.current = cpu;
+            performanceStats.cpu.sum += cpu;
+            performanceStats.cpu.count++;
+            performanceStats.cpu.avg = performanceStats.cpu.sum / performanceStats.cpu.count;
+            performanceStats.cpu.max = Math.max(performanceStats.cpu.max, cpu);
+            
+            // 更新内存统计
+            performanceStats.memory.current = memory;
+            performanceStats.memory.sum += memory;
+            performanceStats.memory.count++;
+            performanceStats.memory.avg = performanceStats.memory.sum / performanceStats.memory.count;
+            performanceStats.memory.max = Math.max(performanceStats.memory.max, memory);
+            
+            // 更新FPS统计
+            if (fps > 0) {
+                performanceStats.fps.current = fps;
+                performanceStats.fps.sum += fps;
+                performanceStats.fps.count++;
+                performanceStats.fps.avg = performanceStats.fps.sum / performanceStats.fps.count;
+                performanceStats.fps.min = Math.min(performanceStats.fps.min, fps);
+            }
+            
+            // 更新线程统计
+            performanceStats.threads.current = threads;
+            performanceStats.threads.sum += threads;
+            performanceStats.threads.count++;
+            performanceStats.threads.avg = performanceStats.threads.sum / performanceStats.threads.count;
+            performanceStats.threads.max = Math.max(performanceStats.threads.max, threads);
+            
+            // 更新统计面板显示
+            updateStatisticsDisplay();
+        }
+        
+        function updateStatisticsDisplay() {
+            document.getElementById('statCpuCurrent').textContent = `${performanceStats.cpu.current.toFixed(1)}%`;
+            document.getElementById('statCpuAvg').textContent = `${performanceStats.cpu.avg.toFixed(1)}%`;
+            document.getElementById('statCpuMax').textContent = `${performanceStats.cpu.max.toFixed(1)}%`;
+            
+            document.getElementById('statMemoryCurrent').textContent = `${performanceStats.memory.current.toFixed(1)}MB`;
+            document.getElementById('statMemoryAvg').textContent = `${performanceStats.memory.avg.toFixed(1)}MB`;
+            document.getElementById('statMemoryMax').textContent = `${performanceStats.memory.max.toFixed(1)}MB`;
+            
+            if (performanceStats.fps.count > 0) {
+                document.getElementById('statFpsCurrent').textContent = `${performanceStats.fps.current}FPS`;
+                document.getElementById('statFpsAvg').textContent = `${performanceStats.fps.avg.toFixed(1)}FPS`;
+                document.getElementById('statFpsMin').textContent = `${performanceStats.fps.min === Infinity ? 0 : performanceStats.fps.min}FPS`;
+            }
+            
+            document.getElementById('statThreadsCurrent').textContent = performanceStats.threads.current;
+            document.getElementById('statThreadsAvg').textContent = performanceStats.threads.avg.toFixed(1);
+            document.getElementById('statThreadsMax').textContent = performanceStats.threads.max;
+        }
+        
+        // 性能阈值检查函数
+        function checkPerformanceThresholds(cpu, memory, fps, threads) {
+            // 更新阈值配置
+            thresholds.cpu = parseInt(document.getElementById('cpuThreshold').value) || 80;
+            thresholds.memory = parseInt(document.getElementById('memoryThreshold').value) || 200;
+            thresholds.fps = parseInt(document.getElementById('fpsThreshold').value) || 30;
+            thresholds.threads = parseInt(document.getElementById('threadsThreshold').value) || 50;
+            
+            activeAlerts = []; // 清空告警列表
+            
+            // 检查CPU阈值
+            if (cpu > thresholds.cpu) {
+                activeAlerts.push({
+                    type: 'cpu',
+                    level: cpu > thresholds.cpu * 1.2 ? 'critical' : 'warning',
+                    message: `CPU使用率过高: ${cpu.toFixed(1)}% (阈值: ${thresholds.cpu}%)`
+                });
+            }
+            
+            // 检查内存阈值
+            if (memory > thresholds.memory) {
+                activeAlerts.push({
+                    type: 'memory',
+                    level: memory > thresholds.memory * 1.2 ? 'critical' : 'warning',
+                    message: `内存使用量过高: ${memory.toFixed(1)}MB (阈值: ${thresholds.memory}MB)`
+                });
+            }
+            
+            // 检查FPS阈值
+            if (fps > 0 && fps < thresholds.fps) {
+                activeAlerts.push({
+                    type: 'fps',
+                    level: fps < thresholds.fps * 0.7 ? 'critical' : 'warning',
+                    message: `帧率过低: ${fps}FPS (阈值: ${thresholds.fps}FPS)`
+                });
+            }
+            
+            // 检查线程数阈值
+            if (threads > thresholds.threads) {
+                activeAlerts.push({
+                    type: 'threads',
+                    level: threads > thresholds.threads * 1.2 ? 'critical' : 'warning',
+                    message: `线程数过多: ${threads} (阈值: ${thresholds.threads})`
+                });
+            }
+            
+            updateAlertsDisplay();
+        }
+        
+        function updateAlertsDisplay() {
+            const alertPanel = document.getElementById('alertPanel');
+            const alertList = document.getElementById('alertList');
+            
+            if (activeAlerts.length === 0) {
+                alertPanel.style.display = 'none';
+                return;
+            }
+            
+            alertPanel.style.display = 'block';
+            alertList.innerHTML = '';
+            
+            activeAlerts.forEach(alert => {
+                const alertItem = document.createElement('div');
+                alertItem.className = `alert-item ${alert.level}`;
+                alertItem.innerHTML = `
+                    <span>${alert.message}</span>
+                    <span>⚠️</span>
+                `;
+                alertList.appendChild(alertItem);
+            });
+        }
+        
+        // 专业级内存泄漏检测主函数
+        function detectMemoryLeak(currentMemory, cpuUsage = 0, fpsRate = 0, threads = 0) {
+            // 使用新的专业检测系统
+            runProfessionalMemoryLeakDetection(currentMemory, cpuUsage, fpsRate, threads);
+            
+            // 兼容旧UI显示
+            updateLegacyMemoryLeakUI(currentMemory);
+        }
+        
+        function showMemoryLeakWarning(growthRate) {
+            const warningEl = document.getElementById('leakWarning');
+            const detailsEl = document.getElementById('leakDetails');
+            
+            detailsEl.innerHTML = `
+                检测到内存持续增长，增长率: ${growthRate.toFixed(2)} MB/min<br>
+                建议检查应用是否存在内存泄漏问题。<br>
+                <small>检测时间窗口: 5分钟</small>
+            `;
+            
+            warningEl.style.display = 'block';
+            warningEl.classList.add('active');
+        }
+        
+        function hideMemoryLeakWarning() {
+            const warningEl = document.getElementById('leakWarning');
+            warningEl.style.display = 'none';
+            warningEl.classList.remove('active');
+        }
+        
+        // 性能评分计算函数
+        function updatePerformanceScores() {
+            const scores = calculatePerformanceScores();
+            
+            // 更新CPU评分
+            updateScoreDisplay('cpu', scores.cpu);
+            
+            // 更新内存评分
+            updateScoreDisplay('memory', scores.memory);
+            
+            // 更新FPS评分
+            updateScoreDisplay('fps', scores.fps);
+            
+            // 更新总体评分
+            const overallScore = Math.round((scores.cpu.score + scores.memory.score + scores.fps.score) / 3);
+            const overallGrade = getGradeFromScore(overallScore);
+            updateScoreDisplay('overall', { score: overallScore, grade: overallGrade });
+        }
+        
+        function calculatePerformanceScores() {
+            const cpu = performanceStats.cpu.current;
+            const memory = performanceStats.memory.current;
+            const fps = performanceStats.fps.current;
+            
+            // CPU评分 (0-100)
+            let cpuScore = Math.max(0, 100 - cpu);
+            if (cpu < 30) cpuScore = 100;
+            else if (cpu < 50) cpuScore = 90;
+            else if (cpu < 70) cpuScore = 75;
+            else if (cpu < 85) cpuScore = 60;
+            else cpuScore = Math.max(0, 100 - cpu);
+            
+            // 内存评分 (假设200MB为基准)
+            let memoryScore = Math.max(0, 100 - (memory / 200) * 100);
+            if (memory < 100) memoryScore = 100;
+            else if (memory < 150) memoryScore = 90;
+            else if (memory < 200) memoryScore = 75;
+            else if (memory < 300) memoryScore = 60;
+            else memoryScore = Math.max(0, 100 - ((memory - 200) / 200) * 100);
+            
+            // FPS评分
+            let fpsScore = 100;
+            if (fps > 0) {
+                if (fps >= 55) fpsScore = 100;
+                else if (fps >= 45) fpsScore = 90;
+                else if (fps >= 30) fpsScore = 75;
+                else if (fps >= 20) fpsScore = 60;
+                else fpsScore = Math.max(0, (fps / 20) * 60);
+            }
+            
+            return {
+                cpu: { score: Math.round(cpuScore), grade: getGradeFromScore(cpuScore) },
+                memory: { score: Math.round(memoryScore), grade: getGradeFromScore(memoryScore) },
+                fps: { score: Math.round(fpsScore), grade: getGradeFromScore(fpsScore) }
+            };
+        }
+        
+        function getGradeFromScore(score) {
+            if (score >= 90) return 'A+';
+            if (score >= 80) return 'A';
+            if (score >= 70) return 'B';
+            if (score >= 60) return 'C';
+            if (score >= 50) return 'D';
+            return 'F';
+        }
+        
+        function updateScoreDisplay(type, scoreData) {
+            const scoreEl = document.getElementById(`${type}Score`);
+            const scoreNumEl = document.getElementById(`${type}ScoreNum`);
+            
+            if (scoreEl && scoreNumEl) {
+                scoreEl.textContent = scoreData.grade;
+                scoreNumEl.textContent = `(${scoreData.score})`;
+                
+                // 更新颜色
+                scoreEl.className = 'score-value grade-' + scoreData.grade.toLowerCase().replace('+', '');
+            }
+        }
+        
+        function resetPerformanceStats() {
+            performanceStats = {
+                cpu: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
+                memory: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
+                fps: { current: 0, avg: 0, min: Infinity, sum: 0, count: 0 },
+                threads: { current: 0, avg: 0, max: 0, sum: 0, count: 0 }
+            };
+            updateStatisticsDisplay();
+            // 重置内存泄漏检测系统
+            memoryLeakDetection.memoryHistory = [];
+            professionalMemoryLeakDetection.memoryHistory = [];
+            professionalMemoryLeakDetection.sceneStateMachine.currentScene = 'unknown';
+            professionalMemoryLeakDetection.sceneStateMachine.sceneHistory = [];
+            professionalMemoryLeakDetection.status.isLeaking = false;
+            professionalMemoryLeakDetection.status.leakSources = [];
+            professionalMemoryLeakDetection.status.suspiciousTransitions = [];
+            professionalMemoryLeakDetection.statistics.totalLeaksDetected = 0;
+            professionalMemoryLeakDetection.statistics.averageRecoveryRate = 0;
+            activeAlerts = [];
+            updateAlertsDisplay();
+        }
+
+        function calculateOverallScore() {
+            const scores = calculatePerformanceScores();
+            return Math.round((scores.cpu.score + scores.memory.score + scores.fps.score) / 3);
+        }
+
+        // 面板拖拽功能
+        let draggedElement = null;
+        let placeholder = null;
+        let dragStartY = 0;
+        let isDragging = false;
+
+        function initDragAndDrop() {
+            const container = document.querySelector('.container');
+            const panels = document.querySelectorAll('.controls');
+            
+            panels.forEach(panel => {
+                panel.setAttribute('draggable', 'true');
+                
+                panel.addEventListener('dragstart', function(e) {
+                    draggedElement = this;
+                    this.classList.add('dragging');
+                    dragStartY = e.clientY;
+                    isDragging = true;
+                    
+                    // 创建占位符
+                    placeholder = document.createElement('div');
+                    placeholder.className = 'drag-placeholder';
+                    
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/html', this.outerHTML);
+                    
+                    setTimeout(() => {
+                        this.style.display = 'none';
+                    }, 0);
+                });
+                
+                panel.addEventListener('dragend', function(e) {
+                    this.classList.remove('dragging');
+                    this.style.display = 'block';
+                    
+                    if (placeholder && placeholder.parentNode) {
+                        placeholder.parentNode.removeChild(placeholder);
+                    }
+                    
+                    draggedElement = null;
+                    placeholder = null;
+                    isDragging = false;
+                });
+            });
+            
+            // 处理拖放目标
+            container.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                
+                if (isDragging && draggedElement && placeholder) {
+                    const afterElement = getDragAfterElement(container, e.clientY);
+                    if (afterElement == null) {
+                        container.appendChild(placeholder);
+                    } else {
+                        container.insertBefore(placeholder, afterElement);
+                    }
+                }
+            });
+            
+            container.addEventListener('drop', function(e) {
+                e.preventDefault();
+                
+                if (draggedElement && placeholder && placeholder.parentNode) {
+                    placeholder.parentNode.insertBefore(draggedElement, placeholder);
+                    placeholder.parentNode.removeChild(placeholder);
+                    
+                    // 保存新的面板顺序到localStorage
+                    savePanelOrder();
+                    
+                    showStatus('面板顺序已调整', 'success');
+                }
+            });
+        }
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.controls:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+
+        function savePanelOrder() {
+            const panels = document.querySelectorAll('.controls');
+            const order = [];
+            
+            panels.forEach(panel => {
+                if (panel.id) {
+                    order.push(panel.id);
+                }
+            });
+            
+            localStorage.setItem('panelOrder', JSON.stringify(order));
+        }
+
+        function restorePanelOrder() {
+            const savedOrder = localStorage.getItem('panelOrder');
+            if (!savedOrder) return;
+            
+            try {
+                const order = JSON.parse(savedOrder);
+                const container = document.querySelector('.container');
+                
+                // 找到所有面板
+                const panels = {};
+                document.querySelectorAll('.controls').forEach(panel => {
+                    if (panel.id) {
+                        panels[panel.id] = panel;
+                    }
+                });
+                
+                // 按保存的顺序重新排列
+                order.forEach(panelId => {
+                    if (panels[panelId]) {
+                        container.appendChild(panels[panelId]);
+                    }
+                });
+                
+                console.log('已恢复面板顺序');
+            } catch (error) {
+                console.log('恢复面板顺序失败:', error);
+            }
+        }
+
+        // 重置面板顺序功能
+        function resetPanelOrder() {
+            localStorage.removeItem('panelOrder');
+            location.reload(); // 简单重新加载页面来恢复默认顺序
+        }
+
+        // 分享功能
+        function showShareDialog() {
+            const dialog = document.getElementById('shareDialog');
+            const urlElement = document.getElementById('shareUrl');
+            
+            // 获取当前页面的分享URL
+            const currentHost = window.location.hostname;
+            const currentPort = window.location.port || (window.location.protocol === 'https:' ? '443' : '80');
+            const shareUrl = `${window.location.protocol}//${currentHost}:${currentPort}`;
+            
+            urlElement.textContent = shareUrl;
+            dialog.style.display = 'flex';
+            
+            // 添加点击背景关闭功能
+            dialog.onclick = function(e) {
+                if (e.target === dialog) {
+                    closeShareDialog();
+                }
+            };
+        }
+
+        function closeShareDialog() {
+            const dialog = document.getElementById('shareDialog');
+            dialog.style.display = 'none';
+        }
+
+        function copyShareUrl() {
+            const urlElement = document.getElementById('shareUrl');
+            const shareUrl = urlElement.textContent;
+            
+            // 使用现代浏览器的Clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    showCopySuccess();
+                }).catch(() => {
+                    fallbackCopyTextToClipboard(shareUrl);
+                });
+            } else {
+                fallbackCopyTextToClipboard(shareUrl);
+            }
+        }
+
+        function fallbackCopyTextToClipboard(text) {
+            // 创建临时文本域
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.left = "-999999px";
+            textArea.style.top = "-999999px";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            
+            try {
+                document.execCommand('copy');
+                showCopySuccess();
+            } catch (err) {
+                console.error('复制失败:', err);
+                showStatus('复制失败，请手动复制链接', 'error');
+            }
+            
+            document.body.removeChild(textArea);
+        }
+
+        function showCopySuccess() {
+            const copyBtn = document.querySelector('.copy-btn');
+            const originalText = copyBtn.textContent;
+            
+            copyBtn.textContent = '✅ 已复制';
+            copyBtn.classList.add('copied');
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.classList.remove('copied');
+            }, 2000);
+            
+            showStatus('分享链接已复制到剪贴板', 'success');
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Shift+S 或 Cmd+Shift+S 快速分享
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                showShareDialog();
+            }
+            // ESC键关闭分享对话框
+            if (e.key === 'Escape') {
+                closeShareDialog();
+            }
+        });
+
         // 页面加载完成后的初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('iOS性能监控可视化界面已加载');
+            
+            // 初始化拖拽功能
+            setTimeout(() => {
+                initDragAndDrop();
+                restorePanelOrder();
+            }, 100);
+        });
+        
+        // ======================== 专业级内存泄漏检测核心函数 ========================
+        
+        // 智能场景识别
+        function detectCurrentScene(currentMemory, cpuUsage, fpsRate, threads) {
+            const history = professionalMemoryLeakDetection.memoryHistory;
+            
+            if (history.length < 5) return 'unknown';
+            
+            // 分析内存变化模式
+            const recentMemory = history.slice(-5).map(h => h.memory);
+            const memoryTrend = calculateTrend(recentMemory);
+            const memoryVolatility = calculateVolatility(recentMemory);
+            
+            // 场景识别规则 (基于真实iOS应用特征)
+            if (currentMemory < 120 && cpuUsage < 20 && Math.abs(memoryTrend) < 2) {
+                return currentMemory < 90 ? 'background' : 'idle';
+            } else if (memoryTrend > 15 && cpuUsage > 40) {
+                return currentMemory > 250 ? 'video_playing' : 'launching';
+            } else if (memoryVolatility > 10 && cpuUsage > 15) {
+                return 'navigation';
+            } else if (currentMemory > 200 && fpsRate > 30) {
+                return 'video_playing';
+            }
+            
+            return 'idle';
+        }
+        
+        // 计算数据趋势
+        function calculateTrend(values) {
+            if (values.length < 2) return 0;
+            let sum = 0;
+            for (let i = 1; i < values.length; i++) {
+                sum += values[i] - values[i-1];
+            }
+            return sum / (values.length - 1);
+        }
+        
+        // 计算数据波动性
+        function calculateVolatility(values) {
+            if (values.length < 2) return 0;
+            const mean = values.reduce((a, b) => a + b, 0) / values.length;
+            const variance = values.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / values.length;
+            return Math.sqrt(variance);
+        }
+        
+        // 专业级检测执行器
+        function runProfessionalMemoryLeakDetection(currentMemory, cpuUsage, fpsRate, threads) {
+            const now = Date.now();
+            const stateMachine = professionalMemoryLeakDetection.sceneStateMachine;
+            const detection = professionalMemoryLeakDetection.detection;
+            
+            // 记录内存历史
+            professionalMemoryLeakDetection.memoryHistory.push({
+                time: now,
+                memory: currentMemory,
+                cpu: cpuUsage,
+                fps: fpsRate,
+                threads: threads,
+                scene: null
+            });
+            
+            // 保持历史记录长度
+            if (professionalMemoryLeakDetection.memoryHistory.length > professionalMemoryLeakDetection.maxHistoryLength) {
+                professionalMemoryLeakDetection.memoryHistory.shift();
+            }
+            
+            // 检测当前场景
+            const detectedScene = detectCurrentScene(currentMemory, cpuUsage, fpsRate, threads);
+            professionalMemoryLeakDetection.memoryHistory[professionalMemoryLeakDetection.memoryHistory.length - 1].scene = detectedScene;
+            
+            // 场景切换检测
+            if (detectedScene !== stateMachine.currentScene && stateMachine.currentScene !== 'unknown') {
+                handleSceneTransition(stateMachine.currentScene, detectedScene, currentMemory, now);
+            }
+            
+            // 更新当前场景信息
+            if (!stateMachine.sceneStartTime || detectedScene !== stateMachine.currentScene) {
+                stateMachine.sceneStartTime = now;
+                stateMachine.sceneStartMemory = currentMemory;
+            }
+            
+            stateMachine.currentScene = detectedScene;
+            
+            // 执行多维度检测
+            if (professionalMemoryLeakDetection.memoryHistory.length >= detection.minSampleSize) {
+                performComprehensiveLeakDetection(currentMemory, now);
+            }
+            
+            // 更新UI显示
+            updateProfessionalMemoryLeakUI();
+        }
+        
+        // 处理场景切换
+        function handleSceneTransition(fromScene, toScene, currentMemory, timestamp) {
+            const stateMachine = professionalMemoryLeakDetection.sceneStateMachine;
+            const detection = professionalMemoryLeakDetection.detection;
+            
+            const sceneDuration = timestamp - stateMachine.sceneStartTime;
+            
+            // 只有场景持续足够长时间才进行分析
+            if (sceneDuration >= detection.sceneMinDuration) {
+                analyzeSceneTransition(fromScene, toScene, stateMachine.sceneStartMemory, currentMemory, sceneDuration);
+            }
+            
+            // 记录场景切换历史
+            stateMachine.sceneHistory.push({
+                fromScene,
+                toScene,
+                startMemory: stateMachine.sceneStartMemory,
+                endMemory: currentMemory,
+                duration: sceneDuration,
+                timestamp: timestamp,
+                memoryDelta: currentMemory - stateMachine.sceneStartMemory
+            });
+            
+            // 保持历史记录长度
+            if (stateMachine.sceneHistory.length > 50) {
+                stateMachine.sceneHistory.shift();
+            }
+            
+            stateMachine.sceneTransitionCount++;
+            console.log(`🔄 场景切换: ${fromScene} → ${toScene}, 内存变化: ${(currentMemory - stateMachine.sceneStartMemory).toFixed(1)}MB`);
+        }
+        
+        // 分析场景切换的内存回收情况
+        function analyzeSceneTransition(fromScene, toScene, startMemory, endMemory, duration) {
+            const profiles = professionalMemoryLeakDetection.sceneProfiles;
+            const status = professionalMemoryLeakDetection.status;
+            
+            // 检查是否从高内存场景切换到低内存场景
+            const fromPriority = profiles[fromScene]?.priority || 0;
+            const toPriority = profiles[toScene]?.priority || 0;
+            
+            if (fromPriority > toPriority) {
+                // 期望内存下降
+                const expectedDecrease = calculateExpectedMemoryDecrease(fromScene, toScene, startMemory);
+                const actualDecrease = Math.max(0, startMemory - endMemory);
+                const recoveryRate = expectedDecrease > 0 ? actualDecrease / expectedDecrease : 1;
+                
+                // 更新统计
+                const stats = professionalMemoryLeakDetection.statistics;
+                stats.averageRecoveryRate = (stats.averageRecoveryRate + recoveryRate) / 2;
+                
+                // 检测内存泄漏
+                if (recoveryRate < professionalMemoryLeakDetection.detection.leakThreshold && expectedDecrease > 10) {
+                    const leakAmount = Math.max(0, expectedDecrease - actualDecrease);
+                    reportMemoryLeak(fromScene, toScene, leakAmount, recoveryRate, 'scene_transition');
+                }
+                
+                console.log(`📊 场景切换分析: ${fromScene} → ${toScene}, 期望回收: ${expectedDecrease.toFixed(1)}MB, 实际回收: ${actualDecrease.toFixed(1)}MB, 回收率: ${(recoveryRate*100).toFixed(1)}%`);
+            }
+        }
+        
+        // 计算期望的内存下降量
+        function calculateExpectedMemoryDecrease(fromScene, toScene, currentMemory) {
+            const profiles = professionalMemoryLeakDetection.sceneProfiles;
+            const fromProfile = profiles[fromScene];
+            const toProfile = profiles[toScene];
+            
+            if (!fromProfile || !toProfile) return 0;
+            
+            // 基于场景特性计算期望下降量
+            const fromExpected = (fromProfile.expectedMemory.min + fromProfile.expectedMemory.max) / 2;
+            const toExpected = (toProfile.expectedMemory.min + toProfile.expectedMemory.max) / 2;
+            
+            // 考虑当前内存水平的调整因子
+            const ratio = Math.min(1.0, Math.max(0.3, currentMemory / fromExpected));
+            return Math.max(0, (fromExpected - toExpected) * ratio);
+        }
+        
+        // 报告内存泄漏
+        function reportMemoryLeak(fromScene, toScene, leakAmount, recoveryRate, source) {
+            const status = professionalMemoryLeakDetection.status;
+            const statistics = professionalMemoryLeakDetection.statistics;
+            
+            statistics.totalLeaksDetected++;
+            
+            const leakReport = {
+                source: source,
+                fromScene: fromScene,
+                toScene: toScene,
+                leakAmount: leakAmount,
+                recoveryRate: recoveryRate,
+                timestamp: Date.now(),
+                severity: leakAmount > 50 ? 'severe' : leakAmount > 20 ? 'moderate' : 'mild'
+            };
+            
+            status.suspiciousTransitions.push(leakReport);
+            
+            // 保持记录长度
+            if (status.suspiciousTransitions.length > 10) {
+                status.suspiciousTransitions.shift();
+            }
+            
+            console.log(`🚨 内存泄漏检测: ${fromScene} → ${toScene}, 泄漏量: ${leakAmount.toFixed(1)}MB, 回收率: ${(recoveryRate*100).toFixed(1)}%`);
+        }
+        
+        // 综合泄漏检测
+        function performComprehensiveLeakDetection(currentMemory, timestamp) {
+            const history = professionalMemoryLeakDetection.memoryHistory;
+            const detection = professionalMemoryLeakDetection.detection;
+            
+            // 1. 趋势分析
+            const trendWindow = Math.min(detection.trendAnalysisWindow, history.length);
+            const recentHistory = history.slice(-trendWindow);
+            const memoryTrend = calculateAdvancedTrend(recentHistory);
+            
+            // 2. 异常检测
+            const anomalies = detectMemoryAnomalies(recentHistory);
+            
+            // 3. 长期内存增长检测
+            const longTermGrowth = analyzeLongTermMemoryGrowth(history);
+            
+            // 综合评估
+            evaluateOverallLeakStatus(memoryTrend, anomalies, longTermGrowth);
+        }
+        
+        // 高级趋势分析
+        function calculateAdvancedTrend(historyWindow) {
+            if (historyWindow.length < 10) return { slope: 0, confidence: 0, pattern: 'insufficient_data' };
+            
+            const memoryValues = historyWindow.map(h => h.memory);
+            const timeValues = historyWindow.map((h, i) => i);
+            
+            // 线性回归
+            const slope = calculateLinearRegressionSlope(timeValues, memoryValues);
+            const correlation = calculateCorrelation(timeValues, memoryValues);
+            
+            return {
+                slope: slope,
+                confidence: Math.abs(correlation),
+                pattern: identifyMemoryPattern(memoryValues),
+                volatility: calculateVolatility(memoryValues)
+            };
+        }
+        
+        // 线性回归斜率计算
+        function calculateLinearRegressionSlope(x, y) {
+            const n = x.length;
+            if (n < 2) return 0;
+            
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+            
+            const denominator = n * sumXX - sumX * sumX;
+            return denominator === 0 ? 0 : (n * sumXY - sumX * sumY) / denominator;
+        }
+        
+        // 相关系数计算
+        function calculateCorrelation(x, y) {
+            const n = x.length;
+            if (n < 2) return 0;
+            
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((sum, xi, i) => sum + xi * y[i], 0);
+            const sumXX = x.reduce((sum, xi) => sum + xi * xi, 0);
+            const sumYY = y.reduce((sum, yi) => sum + yi * yi, 0);
+            
+            const numerator = n * sumXY - sumX * sumY;
+            const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+            
+            return denominator === 0 ? 0 : numerator / denominator;
+        }
+        
+        // 内存模式识别
+        function identifyMemoryPattern(memoryValues) {
+            const trend = calculateTrend(memoryValues);
+            const volatility = calculateVolatility(memoryValues);
+            
+            if (Math.abs(trend) < 1 && volatility < 5) return 'stable';
+            if (trend > 5) return 'increasing';
+            if (trend < -5) return 'decreasing';
+            if (volatility > 15) return 'volatile';
+            return 'normal';
+        }
+        
+        // 内存异常检测
+        function detectMemoryAnomalies(historyWindow) {
+            if (historyWindow.length < 10) return [];
+            
+            const memoryValues = historyWindow.map(h => h.memory);
+            const mean = memoryValues.reduce((a, b) => a + b, 0) / memoryValues.length;
+            const stdDev = Math.sqrt(memoryValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / memoryValues.length);
+            
+            if (stdDev === 0) return [];
+            
+            const threshold = professionalMemoryLeakDetection.detection.anomalyThreshold;
+            const anomalies = [];
+            
+            memoryValues.forEach((value, index) => {
+                const zScore = Math.abs((value - mean) / stdDev);
+                if (zScore > threshold) {
+                    anomalies.push({
+                        index: index,
+                        value: value,
+                        zScore: zScore,
+                        severity: zScore > 3 ? 'high' : 'medium'
+                    });
+                }
+            });
+            
+            return anomalies;
+        }
+        
+        // 长期内存增长分析
+        function analyzeLongTermMemoryGrowth(fullHistory) {
+            if (fullHistory.length < 50) return { growth: 0, significance: 'low' };
+            
+            const segments = Math.min(5, Math.floor(fullHistory.length / 20));
+            const segmentSize = Math.floor(fullHistory.length / segments);
+            const segmentAverages = [];
+            
+            for (let i = 0; i < segments; i++) {
+                const start = i * segmentSize;
+                const end = start + segmentSize;
+                const segment = fullHistory.slice(start, end);
+                const average = segment.reduce((sum, h) => sum + h.memory, 0) / segment.length;
+                segmentAverages.push(average);
+            }
+            
+            const overallGrowth = segmentAverages[segmentAverages.length - 1] - segmentAverages[0];
+            const growthRate = overallGrowth / segmentAverages.length;
+            
+            return {
+                growth: overallGrowth,
+                growthRate: growthRate,
+                significance: Math.abs(growthRate) > 5 ? 'high' : 'low',
+                segmentAverages: segmentAverages
+            };
+        }
+        
+        // 综合评估泄漏状态
+        function evaluateOverallLeakStatus(trendAnalysis, anomalies, longTermGrowth) {
+            const status = professionalMemoryLeakDetection.status;
+            let leakScore = 0;
+            const leakSources = [];
+            
+            // 趋势分析评分
+            if (trendAnalysis.slope > 2 && trendAnalysis.confidence > 0.7) {
+                leakScore += 30;
+                leakSources.push(`持续内存增长趋势 (${trendAnalysis.slope.toFixed(2)} MB/样本)`);
+            }
+            
+            // 异常检测评分
+            if (anomalies.length > 0) {
+                leakScore += Math.min(25, anomalies.length * 5);
+                leakSources.push(`检测到 ${anomalies.length} 个内存异常峰值`);
+            }
+            
+            // 长期增长评分
+            if (longTermGrowth.significance === 'high' && longTermGrowth.growth > 30) {
+                leakScore += 25;
+                leakSources.push(`长期内存增长 ${longTermGrowth.growth.toFixed(1)} MB`);
+            }
+            
+            // 场景切换异常评分
+            if (status.suspiciousTransitions.length > 0) {
+                leakScore += Math.min(20, status.suspiciousTransitions.length * 4);
+                leakSources.push(`场景切换异常 ${status.suspiciousTransitions.length} 次`);
+            }
+            
+            // 确定泄漏等级
+            let leakLevel = 'none';
+            if (leakScore >= 70) leakLevel = 'severe';
+            else if (leakScore >= 45) leakLevel = 'moderate';
+            else if (leakScore >= 20) leakLevel = 'mild';
+            
+            // 更新状态
+            const wasLeaking = status.isLeaking;
+            status.isLeaking = leakLevel !== 'none';
+            status.leakLevel = leakLevel;
+            status.leakSources = leakSources;
+            
+            // 如果状态改变，触发警告
+            if (status.isLeaking && !wasLeaking) {
+                showProfessionalMemoryLeakWarning(leakLevel, leakSources, leakScore);
+            } else if (!status.isLeaking && wasLeaking) {
+                hideProfessionalMemoryLeakWarning();
+            }
+        }
+        
+        // 更新专业级内存泄漏UI显示
+        function updateProfessionalMemoryLeakUI() {
+            const status = professionalMemoryLeakDetection.status;
+            const stateMachine = professionalMemoryLeakDetection.sceneStateMachine;
+            const statistics = professionalMemoryLeakDetection.statistics;
+            
+            // 更新检测状态
+            const leakStatusEl = document.getElementById('leakStatus');
+            const memoryTrendEl = document.getElementById('memoryTrend');
+            const leakRateEl = document.getElementById('leakRate');
+            
+            if (leakStatusEl) {
+                if (status.isLeaking) {
+                    const levelText = status.leakLevel === 'severe' ? '🔴 严重泄漏' : 
+                                     status.leakLevel === 'moderate' ? '🟠 中度泄漏' : '🟡 轻微泄漏';
+                    leakStatusEl.textContent = levelText;
+                } else {
+                    leakStatusEl.textContent = '✅ 正常';
+                }
+            }
+            
+            if (memoryTrendEl) {
+                const sceneName = professionalMemoryLeakDetection.sceneProfiles[stateMachine.currentScene]?.name || stateMachine.currentScene;
+                memoryTrendEl.textContent = `当前场景: ${sceneName}`;
+            }
+            
+            if (leakRateEl) {
+                leakRateEl.textContent = `平均回收率: ${(statistics.averageRecoveryRate * 100).toFixed(1)}%`;
+            }
+        }
+        
+        // 专业级泄漏警告显示
+        function showProfessionalMemoryLeakWarning(leakLevel, leakSources, leakScore) {
+            const warningEl = document.getElementById('leakWarning');
+            const detailsEl = document.getElementById('leakDetails');
+            
+            if (detailsEl) {
+                const severityText = leakLevel === 'severe' ? '🔴 严重' : leakLevel === 'moderate' ? '🟠 中度' : '🟡 轻微';
+                
+                detailsEl.innerHTML = `
+                    <div style="margin-bottom: 10px;">
+                        <strong>${severityText} 内存泄漏检测 (评分: ${leakScore})</strong>
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                        <strong>检测源:</strong>
+                        ${leakSources.map(source => `<div style="margin-left: 10px;">• ${source}</div>`).join('')}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-top: 8px;">
+                        🎯 <strong>专业级检测方法:</strong><br>
+                        • 场景切换内存回收率分析<br>
+                        • 统计学异常检测 (Z-Score)<br>
+                        • 线性回归趋势分析<br>
+                        • 长期内存增长模式识别
+                    </div>
+                `;
+            }
+            
+            if (warningEl) {
+                warningEl.style.display = 'block';
+                warningEl.classList.add('active');
+            }
+            
+            console.log(`🚨 专业级内存泄漏检测: ${leakLevel}, 评分: ${leakScore}, 源: ${leakSources.join(', ')}`);
+        }
+        
+        // 隐藏专业级泄漏警告
+        function hideProfessionalMemoryLeakWarning() {
+            const warningEl = document.getElementById('leakWarning');
+            if (warningEl) {
+                warningEl.style.display = 'none';
+                warningEl.classList.remove('active');
+            }
+        }
+        
+        // 兼容旧系统的内存泄漏UI更新
+        function updateLegacyMemoryLeakUI(currentMemory) {
+            const now = Date.now();
+            memoryLeakDetection.memoryHistory.push({
+                time: now,
+                memory: currentMemory
+            });
+            
+            // 保持检测窗口大小
+            const windowStart = now - memoryLeakDetection.detectionWindow;
+            memoryLeakDetection.memoryHistory = memoryLeakDetection.memoryHistory.filter(
+                item => item.time >= windowStart
+            );
+            
+            // 使用专业检测结果更新旧系统状态
+            memoryLeakDetection.isLeaking = professionalMemoryLeakDetection.status.isLeaking;
+            
+            // 如果没有专业级警告显示，使用旧的简单显示
+            if (!professionalMemoryLeakDetection.status.isLeaking && memoryLeakDetection.memoryHistory.length >= 10) {
+                const timeSpan = (now - memoryLeakDetection.memoryHistory[0].time) / 60000;
+                const memoryIncrease = currentMemory - memoryLeakDetection.memoryHistory[0].memory;
+                const growthRate = memoryIncrease / timeSpan;
+                
+                const leakRateEl = document.getElementById('leakRate');
+                if (leakRateEl && !professionalMemoryLeakDetection.status.isLeaking) {
+                    leakRateEl.textContent = `增长率: ${growthRate.toFixed(2)} MB/min`;
+                }
+            }
+        }
+        
+        // ================== 测试场景自动化功能 ==================
+        
+        // 启动测试场景
+        function startTestScenario() {
+            const scenarioType = document.getElementById('scenarioType').value;
+            const udid = document.getElementById('udid').value;
+            const bundleId = document.getElementById('bundleId').value;
+            
+            console.log(`🧪 启动测试场景: ${scenarioType}`);
+            
+            // 显示状态面板
+            const statusPanel = document.getElementById('scenarioStatus');
+            const resultsPanel = document.getElementById('scenarioResults');
+            statusPanel.style.display = 'block';
+            resultsPanel.style.display = 'block';
+            
+            // 更新状态
+            updateScenarioStatus('🔄', '正在启动测试...', 0);
+            clearScenarioLog();
+            
+            // 更新按钮状态
+            document.getElementById('startScenarioBtn').disabled = true;
+            document.getElementById('stopScenarioBtn').disabled = false;
+            
+            // 发送启动请求到后端
+            socket.emit('start_test_scenario', {
+                scenario_type: scenarioType,
+                udid: udid,
+                bundle_id: bundleId
+            });
+            
+            addScenarioLog(`📋 开始执行测试场景: ${getScenarioDisplayName(scenarioType)}`);
+        }
+        
+        // 停止测试场景
+        function stopTestScenario() {
+            console.log('⏹️ 停止测试场景');
+            
+            // 发送停止请求到后端
+            socket.emit('stop_test_scenario');
+            
+            // 更新状态
+            updateScenarioStatus('⏹️', '正在停止测试...', 0);
+            
+            // 更新按钮状态
+            document.getElementById('startScenarioBtn').disabled = false;
+            document.getElementById('stopScenarioBtn').disabled = true;
+            
+            addScenarioLog('⏹️ 用户手动停止测试');
+        }
+        
+        // 更新测试场景状态
+        function updateScenarioStatus(icon, text, progress) {
+            document.getElementById('scenarioStatusIcon').textContent = icon;
+            document.getElementById('scenarioStatusText').textContent = text;
+            document.getElementById('scenarioProgress').style.width = progress + '%';
+        }
+        
+        // 添加测试日志
+        function addScenarioLog(message) {
+            const logContainer = document.getElementById('scenarioLog');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.innerHTML = `<span style="color: #666;">[${timestamp}]</span> ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // 清空测试日志
+        function clearScenarioLog() {
+            document.getElementById('scenarioLog').innerHTML = '';
+        }
+        
+        // 获取场景显示名称
+        function getScenarioDisplayName(scenarioType) {
+            const names = {
+                'app_launch': '应用启动测试',
+                'memory_stress': '内存压力测试', 
+                'ui_interaction': '界面交互测试',
+                'background_switch': '后台切换测试'
+            };
+            return names[scenarioType] || scenarioType;
+        }
+        
+        // ================== Socket.IO 测试场景事件处理 ==================
+        
+        // 测试场景启动成功
+        socket.on('scenario_started', function(data) {
+            console.log('✅ 测试场景启动成功:', data);
+            updateScenarioStatus('✅', '测试场景已启动', 10);
+            addScenarioLog(`✅ 测试场景启动成功: ${getScenarioDisplayName(data.type)}`);
+        });
+        
+        // 测试场景停止
+        socket.on('scenario_stopped', function(data) {
+            console.log('⏹️ 测试场景已停止:', data);
+            updateScenarioStatus('⏹️', '测试已停止', 0);
+            addScenarioLog('⏹️ 测试场景已停止');
+            
+            // 恢复按钮状态
+            document.getElementById('startScenarioBtn').disabled = false;
+            document.getElementById('stopScenarioBtn').disabled = true;
+        });
+        
+        // 测试场景错误
+        socket.on('scenario_error', function(data) {
+            console.error('❌ 测试场景错误:', data);
+            updateScenarioStatus('❌', `错误: ${data.message}`, 0);
+            addScenarioLog(`❌ 错误: ${data.message}`);
+            
+            // 恢复按钮状态
+            document.getElementById('startScenarioBtn').disabled = false;
+            document.getElementById('stopScenarioBtn').disabled = true;
+        });
+        
+        // 测试场景事件（实时更新）
+        socket.on('scenario_event', function(data) {
+            console.log('📊 测试场景事件:', data);
+            
+            switch(data.type) {
+                case 'test_start':
+                    updateScenarioStatus('🚀', data.message, 20);
+                    addScenarioLog(`🚀 ${data.message}`);
+                    break;
+                case 'progress':
+                    updateScenarioStatus('🔄', data.message, data.progress || 50);
+                    addScenarioLog(`🔄 ${data.message}`);
+                    break;
+                case 'launch_result':
+                    addScenarioLog(`⚡ ${data.message}`);
+                    break;
+                case 'manual_prompt':
+                    updateScenarioStatus('👆', data.message, 50);
+                    addScenarioLog(`👆 ${data.message}`);
+                    break;
+                case 'manual_success':
+                    addScenarioLog(`✅ ${data.message}`);
+                    break;
+                case 'test_complete':
+                    updateScenarioStatus('✅', data.message, 100);
+                    addScenarioLog(`🎉 ${data.message}`);
+                    
+                    // 5秒后恢复按钮状态
+                    setTimeout(() => {
+                        document.getElementById('startScenarioBtn').disabled = false;
+                        document.getElementById('stopScenarioBtn').disabled = true;
+                    }, 5000);
+                    break;
+                case 'error':
+                    updateScenarioStatus('❌', data.message, 0);
+                    addScenarioLog(`❌ ${data.message}`);
+                    
+                    // 恢复按钮状态
+                    document.getElementById('startScenarioBtn').disabled = false;
+                    document.getElementById('stopScenarioBtn').disabled = true;
+                    break;
+            }
+        });
+        
+        // 测试标记事件（在图表上添加标记）
+        socket.on('test_marker', function(data) {
+            console.log('🏷️ 测试标记:', data);
+            
+            // 在图表上添加测试标记
+            const timestamp = new Date().toLocaleTimeString();
+            addScenarioLog(`🏷️ ${data.message} (${timestamp})`);
+            
+            // 可以在这里添加在图表上显示标记的逻辑
+            // 例如在当前时间点添加垂直线或标记
+        });
+        
+        // 监控启动时启用测试场景按钮
+        socket.on('monitoring_started', function(data) {
+            if (data.status === 'success') {
+                document.getElementById('startScenarioBtn').disabled = false;
+                addScenarioLog('📱 性能监控已启动，可以开始测试场景');
+            }
+        });
+        
+        // 监控停止时禁用测试场景按钮
+        socket.on('monitoring_stopped', function(data) {
+            document.getElementById('startScenarioBtn').disabled = true;
+            document.getElementById('stopScenarioBtn').disabled = true;
+            updateScenarioStatus('⏸️', '监控已停止', 0);
+            addScenarioLog('⏸️ 性能监控已停止，测试场景功能暂停');
         });
     </script>
 </body>
