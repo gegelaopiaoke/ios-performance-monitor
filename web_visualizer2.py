@@ -179,7 +179,7 @@ def run_with_admin_privileges(command):
             cmd = f"sudo {sys.executable} {' '.join(command)}"
             child = pexpect.spawn(cmd)
             child.expect('Password:')
-            child.sendline('black')  # 自动输入密码
+            child.sendline('123456')  # 自动输入密码
             child.interact()  # 交互模式
         except ImportError:
             # 如果没有pexpect，回退到普通sudo
@@ -189,7 +189,7 @@ def run_with_admin_privileges(command):
 # Web路由
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index2.html')
 
 @socketio.on('start_monitoring')
 def handle_start_monitoring(data):

@@ -85,6 +85,7 @@ class WebPerformanceAnalyzer(object):
         self.udid = udid
         self.host = host
         self.port = port
+        self.fps = None
 
     def ios17_proc_perf(self, bundle_id):
         """ Get application performance data - 与main.py逻辑完全一致 """
@@ -113,14 +114,16 @@ class WebPerformanceAnalyzer(object):
                             attrs.Memory = convertBytes(attrs.Memory)
                             attrs.DiskReads = convertBytes(attrs.DiskReads)
                             attrs.DiskWrites = convertBytes(attrs.DiskWrites)
+                            attrs.FPS = self.fps
+                            attrs.Time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                             
                             # 发送数据到Web界面
-                            current_time = datetime.now().strftime('%H:%M:%S')
                             data = {
-                                'time': current_time,
+                                'time': attrs.Time,
                                 'cpu': cpu_value,
                                 'memory': memory_bytes / (1024 * 1024),  # 转换为MB
                                 'threads': attrs.Threads,
+                                'fps': attrs.FPS,
                                 'pid': attrs.Pid,
                                 'name': attrs.Name
                             }
@@ -150,18 +153,10 @@ class WebPerformanceAnalyzer(object):
                 return
                 
             data = res.selector
-            fps_value = data['CoreAnimationFramesPerSecond']
-            current_time = datetime.now()
-            
-            # 发送数据到Web界面
-            fps_data = {
-                'time': current_time.strftime('%H:%M:%S'),
-                'fps': fps_value
-            }
-            socketio.emit('fps_data', fps_data)
+            self.fps = data['CoreAnimationFramesPerSecond']
             
             # 同时保持原始的print_json输出（完全一致）
-            print(json.dumps({"currentTime": str(current_time), "fps": fps_value}))
+            print(json.dumps({"currentTime": str(datetime.now()), "fps": self.fps}))
 
         with RemoteLockdownClient((self.host, self.port)) as rsd:
             with InstrumentsBase(udid=self.udid, network=False, lockdown=rsd) as rpc:

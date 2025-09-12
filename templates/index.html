@@ -1761,12 +1761,19 @@
                             addDataToChart(memoryChart, item.time, item.memory);
                             addDataToChart(threadsChart, item.time, item.threads);
                             
+                            // 如果有FPS数据也添加到FPS图表
+                            if (item.fps !== null && item.fps !== undefined) {
+                                addDataToChart(fpsChart, item.time, item.fps);
+                                document.getElementById('currentFps').textContent = `${item.fps}FPS`;
+                            }
+                            
                             // 更新当前值显示
                             document.getElementById('currentCpu').textContent = `${item.cpu}%`;
                             document.getElementById('currentMemory').textContent = `${item.memory.toFixed(1)}MB`;
                             document.getElementById('currentThreads').textContent = item.threads;
                             dataCount++;
                         } else if (item.type === 'fps') {
+                            // 向后兼容：处理旧格式的单独FPS数据
                             addDataToChart(fpsChart, item.time, item.fps);
                             document.getElementById('currentFps').textContent = `${item.fps}FPS`;
                         }
@@ -2174,6 +2181,7 @@
                 cpu: data.cpu,
                 memory: data.memory,
                 threads: data.threads,
+                fps: data.fps,
                 pid: data.pid,
                 name: data.name
             });
@@ -2183,35 +2191,25 @@
             document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
             document.getElementById('currentThreads').textContent = data.threads;
             
+            // 更新FPS显示（如果有FPS数据）
+            if (data.fps !== null && data.fps !== undefined) {
+                document.getElementById('currentFps').textContent = `${data.fps}FPS`;
+            }
+            
             // 添加数据到图表
             addDataToChart(cpuChart, data.time, data.cpu);
             addDataToChart(memoryChart, data.time, data.memory);
             addDataToChart(threadsChart, data.time, data.threads);
             
+            // 添加FPS数据到图表（如果有FPS数据）
+            if (data.fps !== null && data.fps !== undefined) {
+                addDataToChart(fpsChart, data.time, data.fps);
+            }
+            
             // 更新性能统计分析
-            updatePerformanceStats(data.cpu, data.memory, 0, data.threads); // FPS单独处理
+            updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads);
         });
 
-        socket.on('fps_data', function(data) {
-            if (!isMonitoring) return;
-            
-            // 保存到allPerformanceData用于导出
-            allPerformanceData.push({
-                type: 'fps',
-                timestamp: new Date().toISOString(),
-                time: data.time,
-                fps: data.fps
-            });
-            
-            // 更新当前FPS显示
-            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
-            
-            // 添加FPS数据到图表
-            addDataToChart(fpsChart, data.time, data.fps);
-            
-            // 单独更新FPS统计
-            updateStat('fps', data.fps);
-        });
 
         socket.on('connect', function() {
             console.log('已连接到服务器');
