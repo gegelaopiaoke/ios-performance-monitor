@@ -580,9 +580,18 @@
             </div>
             <button class="btn" id="startBtn" onclick="startMonitoring()">开始监控</button>
             <button class="btn" id="stopBtn" onclick="stopMonitoring()" disabled>停止监控</button>
-            <button class="btn" id="saveBtn" onclick="saveData()" disabled>保存数据</button>
-            <button class="btn" id="importBtn" onclick="document.getElementById('fileInput').click()">导入数据</button>
-            <input type="file" id="fileInput" accept=".json" style="display: none;" onchange="importData(event)">
+            
+            <!-- 导出数据控制 -->
+            <div style="display: inline-flex; align-items: center; gap: 8px;">
+                <select id="exportFormat" style="padding: 8px; border: 1px solid #d2d2d7; border-radius: 6px; font-size: 14px;">
+                    <option value="json">JSON格式</option>
+                    <option value="csv">CSV格式</option>
+                </select>
+                <button class="btn" id="saveBtn" onclick="saveData()" disabled>📥 导出数据</button>
+            </div>
+            
+            <button class="btn" id="importBtn" onclick="document.getElementById('fileInput').click()">📤 导入数据</button>
+            <input type="file" id="fileInput" accept=".json,.csv" style="display: none;" onchange="importData(event)">
         </div>
 
         <div id="status" class="status hidden"></div>
@@ -1407,7 +1416,12 @@
 
         // 保存数据函数（调用新的包含场景的保存功能）
         function saveData() {
-            saveDataWithScenes();
+            const exportFormat = document.getElementById('exportFormat').value;
+            if (exportFormat === 'csv') {
+                saveDataAsCSV();
+            } else {
+                saveDataWithScenes();
+            }
         }
 
         // 导入数据函数
@@ -1844,6 +1858,109 @@
             URL.revokeObjectURL(url);
 
             showStatus(`数据和场景已保存到 ${filename}`, 'success');
+        }
+
+        // CSV格式导出函数
+        function saveDataAsCSV() {
+            if (allTimeLabels.length === 0) {
+                showStatus('没有性能数据可导出', 'error');
+                return;
+            }
+
+            // 准备CSV数据
+            const csvData = [];
+            
+            // CSV标题行
+            const headers = [
+                'Timestamp',
+                'Time',
+                'CPU Usage (%)',
+                'Memory Usage (MB)',
+                'FPS',
+                'Thread Count',
+                'Scene',
+                'Tags'
+            ];
+            csvData.push(headers);
+
+            // 数据行
+            for (let i = 0; i < allTimeLabels.length; i++) {
+                const timestamp = allTimeLabels[i];
+                const timeStr = new Date(timestamp).toLocaleString('zh-CN');
+                const cpu = allCpuData[i] || 0;
+                const memory = allMemoryData[i] || 0;
+                const fps = allFpsData[i] || 0;
+                const threads = allThreadsData[i] || 0;
+                
+                // 查找当前时间点的场景和标签
+                const currentTime = new Date(timestamp).getTime();
+                let sceneInfo = '';
+                let tagInfo = '';
+                
+                // 检查是否在某个场景区间内
+                for (const scene of savedScenes) {
+                    const sceneStart = new Date(scene.startTime).getTime();
+                    const sceneEnd = new Date(scene.endTime).getTime();
+                    if (currentTime >= sceneStart && currentTime <= sceneEnd) {
+                        sceneInfo = scene.name;
+                        break;
+                    }
+                }
+                
+                // 检查是否有标签
+                for (const tag of savedTags) {
+                    const tagTime = new Date(tag.time).getTime();
+                    if (Math.abs(currentTime - tagTime) < 5000) { // 5秒误差范围
+                        tagInfo = tag.note || 'Tag';
+                        break;
+                    }
+                }
+                
+                const row = [
+                    timestamp,
+                    timeStr,
+                    cpu.toFixed(2),
+                    memory.toFixed(2),
+                    fps.toFixed(1),
+                    threads,
+                    sceneInfo,
+                    tagInfo
+                ];
+                csvData.push(row);
+            }
+
+            // 转换为CSV字符串
+            const csvContent = csvData.map(row => 
+                row.map(field => {
+                    // 处理包含逗号、引号或换行的字段
+                    const fieldStr = String(field);
+                    if (fieldStr.includes(',') || fieldStr.includes('"') || fieldStr.includes('\n')) {
+                        return '"' + fieldStr.replace(/"/g, '""') + '"';
+                    }
+                    return fieldStr;
+                }).join(',')
+            ).join('\n');
+
+            // 添加BOM以支持中文字符
+            const BOM = '\uFEFF';
+            const csvWithBOM = BOM + csvContent;
+
+            // 生成文件名
+            const now = new Date();
+            const filename = `ios_performance_${now.getFullYear()}${(now.getMonth()+1).toString().padStart(2,'0')}${now.getDate().toString().padStart(2,'0')}_${now.getHours().toString().padStart(2,'0')}${now.getMinutes().toString().padStart(2,'0')}.csv`;
+            
+            // 下载文件
+            const blob = new Blob([csvWithBOM], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showStatus(`CSV数据导出成功！文件: ${filename}`, 'success');
         }
 
         socket.on('monitoring_started', function(data) {
