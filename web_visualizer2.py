@@ -43,11 +43,6 @@ performance_data = {
     'threads_data': []
 }
 
-# 监控状态管理
-monitoring_active = True
-monitoring_threads = []
-performance_analyzer = None
-
 # 完全复制main.py的TunnelManager类（逻辑一模一样）
 class TunnelManager(object):
     def __init__(self):
@@ -85,6 +80,7 @@ class WebPerformanceAnalyzer(object):
         self.udid = udid
         self.host = host
         self.port = port
+        self.fps = None
 
     def ios17_proc_perf(self, bundle_id):
         """ Get application performance data - 与main.py逻辑完全一致 """
@@ -92,10 +88,6 @@ class WebPerformanceAnalyzer(object):
         process_attributes = dataclasses.make_dataclass('SystemProcessAttributes', proc_filter)
 
         def on_callback_proc_message(res):
-            # 检查监控是否仍在激活状态
-            if not monitoring_active:
-                return
-            
             if isinstance(res.selector, list):
                 for index, row in enumerate(res.selector):
                     if 'Processes' in row:
@@ -105,27 +97,27 @@ class WebPerformanceAnalyzer(object):
                                 continue
                             if not attrs.CPU:
                                 attrs.CPU = 0
-                            
-                            # 保持与main.py相同的数据处理逻辑
                             cpu_value = round(attrs.CPU, 2)
-                            attrs.CPU = f'{cpu_value} %'
+                            attrs.CPU = f'{round(attrs.CPU, 2)} %'
                             memory_bytes = attrs.Memory
                             attrs.Memory = convertBytes(attrs.Memory)
                             attrs.DiskReads = convertBytes(attrs.DiskReads)
                             attrs.DiskWrites = convertBytes(attrs.DiskWrites)
-                            
+                            attrs.FPS = self.fps
+                            attrs.Time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                             # 发送数据到Web界面
-                            current_time = datetime.now().strftime('%H:%M:%S')
+                            # current_time = datetime.now().strftime('%H:%M:%S')
                             data = {
-                                'time': current_time,
+                                'time': attrs.Time,
                                 'cpu': cpu_value,
                                 'memory': memory_bytes / (1024 * 1024),  # 转换为MB
                                 'threads': attrs.Threads,
+                                'fps': attrs.FPS,
                                 'pid': attrs.Pid,
                                 'name': attrs.Name
                             }
                             socketio.emit('performance_data', data)
-                            
+
                             # 同时保持原始的print_json输出（完全一致）
                             print(json.dumps(attrs.__dict__))
 
@@ -145,23 +137,20 @@ class WebPerformanceAnalyzer(object):
         """ Get fps data - 与main.py逻辑完全一致 """
 
         def on_callback_fps_message(res):
-            # 检查监控是否仍在激活状态
-            if not monitoring_active:
-                return
-                
             data = res.selector
-            fps_value = data['CoreAnimationFramesPerSecond']
-            current_time = datetime.now()
+            self.fps = data['CoreAnimationFramesPerSecond']
+            # fps_value = data['CoreAnimationFramesPerSecond']
+            # current_time = datetime.now()
             
-            # 发送数据到Web界面
-            fps_data = {
-                'time': current_time.strftime('%H:%M:%S'),
-                'fps': fps_value
-            }
-            socketio.emit('fps_data', fps_data)
+            # # 发送数据到Web界面
+            # fps_data = {
+            #     'time': current_time.strftime('%H:%M:%S'),
+            #     'fps': fps_value
+            # }
+            # socketio.emit('fps_data', fps_data)
             
             # 同时保持原始的print_json输出（完全一致）
-            print(json.dumps({"currentTime": str(current_time), "fps": fps_value}))
+            # print(json.dumps({"currentTime": str(current_time), "fps": fps_value}))
 
         with RemoteLockdownClient((self.host, self.port)) as rsd:
             with InstrumentsBase(udid=self.udid, network=False, lockdown=rsd) as rpc:
@@ -190,7 +179,7 @@ def run_with_admin_privileges(command):
             cmd = f"sudo {sys.executable} {' '.join(command)}"
             child = pexpect.spawn(cmd)
             child.expect('Password:')
-            child.sendline('123456')  # 自动输入密码
+            child.sendline('black')  # 自动输入密码
             child.interact()  # 交互模式
         except ImportError:
             # 如果没有pexpect，回退到普通sudo
@@ -204,70 +193,23 @@ def index():
 
 @socketio.on('start_monitoring')
 def handle_start_monitoring(data):
-    global monitoring_active, monitoring_threads, performance_analyzer
     udid = data.get('udid', '')
     bundle_id = data.get('bundle_id', '')
     
-    # 重置监控状态
-    monitoring_active = True
-    
     def start_performance_monitoring():
-        global performance_analyzer
         # 完全复制main.py的主要逻辑
         tunnel_manager = TunnelManager()
         tunnel_manager.get_tunnel()
         performance_analyzer = WebPerformanceAnalyzer(udid, tunnel_manager.tunnel_host, tunnel_manager.tunnel_port)
         
         # 与main.py完全一致的线程启动方式
-        proc_thread = threading.Thread(target=performance_analyzer.ios17_proc_perf, args=(bundle_id,))
-        fps_thread = threading.Thread(target=performance_analyzer.ios17_fps_perf)
-        
-        proc_thread.start()
+        threading.Thread(target=performance_analyzer.ios17_proc_perf, args=(bundle_id,)).start()
         time.sleep(0.1)
-        fps_thread.start()
-        
-        # 存储线程引用
-        monitoring_threads.clear()
-        monitoring_threads.append(proc_thread)
-        monitoring_threads.append(fps_thread)
+        threading.Thread(target=performance_analyzer.ios17_fps_perf).start()
     
     # 在后台启动性能监控
     threading.Thread(target=start_performance_monitoring).start()
     emit('monitoring_started', {'status': 'success'})
-
-
-@socketio.on('stop_monitoring')
-def handle_stop_monitoring():
-    global monitoring_active, monitoring_threads, performance_analyzer
-    print("DEBUG: 收到停止监控请求")
-    
-    # 设置监控为非激活状态
-    monitoring_active = False
-    
-    # 停止performance_analyzer的监控
-    if performance_analyzer:
-        try:
-            # 如果analyzer有停止方法，调用它们
-            if hasattr(performance_analyzer, 'stop_performance_collection'):
-                performance_analyzer.stop_performance_collection()
-            if hasattr(performance_analyzer, 'stop_fps_collection'):
-                performance_analyzer.stop_fps_collection()
-            print("DEBUG: 已调用performance_analyzer的停止方法")
-        except Exception as e:
-            print(f"DEBUG: 停止performance_analyzer时出错: {e}")
-    
-    # 等待线程结束
-    for thread in monitoring_threads:
-        if thread.is_alive():
-            print(f"DEBUG: 等待线程 {thread} 结束")
-            thread.join(timeout=2.0)
-            if thread.is_alive():
-                print(f"DEBUG: 线程 {thread} 仍在运行")
-    
-    monitoring_threads.clear()
-    performance_analyzer = None
-    emit('monitoring_stopped', {'status': 'success'})
-    print("DEBUG: 监控已完全停止")
 
 
 if __name__ == '__main__':

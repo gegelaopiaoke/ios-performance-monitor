@@ -279,7 +279,7 @@
             <h3>🔧 监控配置</h3>
             <div class="form-group">
                 <label for="udid">设备UDID（可选）:</label>
-                <input type="text" id="udid" placeholder="留空使用默认设备">
+                <input type="text" id="udid" value="00008020-000A09960121002E" placeholder="留空使用默认设备">
             </div>
             <div class="form-group">
                 <label for="bundleId">应用Bundle ID:</label>
@@ -872,16 +872,19 @@
                             addDataToChart(cpuChart, item.time, item.cpu);
                             addDataToChart(memoryChart, item.time, item.memory);
                             addDataToChart(threadsChart, item.time, item.threads);
+                            addDataToChart(fpsChart, item.time, item.fps);
                             
                             // 更新当前值显示
                             document.getElementById('currentCpu').textContent = `${item.cpu}%`;
                             document.getElementById('currentMemory').textContent = `${item.memory.toFixed(1)}MB`;
                             document.getElementById('currentThreads').textContent = item.threads;
+                            document.getElementById('currentFps').textContent = `${item.fps}FPS`;
                             dataCount++;
-                        } else if (item.type === 'fps') {
+                        }
+                        /*else if (item.type === 'fps') {
                             addDataToChart(fpsChart, item.time, item.fps);
                             document.getElementById('currentFps').textContent = `${item.fps}FPS`;
-                        }
+                        }*/
                     });
 
                     // 导入场景数据
@@ -965,12 +968,11 @@
 
         // 停止监控
         function stopMonitoring() {
-            if (!isMonitoring) return;
-            
-            // 发送停止信号到后端
-            socket.emit('stop_monitoring');
-            
-            showStatus('正在停止监控...', 'info');
+            isMonitoring = false;
+            document.getElementById('startBtn').disabled = false;
+            document.getElementById('stopBtn').disabled = true;
+            showStatus('监控已停止', 'info');
+            // 保持图表显示，不隐藏
         }
 
         // Socket.IO事件处理
@@ -1126,13 +1128,13 @@
 
         function generateSceneSummary(sceneData) {
             const perfData = sceneData.filter(item => item.type === 'performance');
-            const fpsData = sceneData.filter(item => item.type === 'fps');
+            //const fpsData = sceneData.filter(item => item.type === 'fps');
             
             if (perfData.length === 0) return {};
             
             const cpuValues = perfData.map(item => item.cpu);
             const memoryValues = perfData.map(item => item.memory);
-            const fpsValues = fpsData.map(item => item.fps);
+            const fpsValues = perfData.map(item => item.fps);
             
             return {
                 duration: perfData.length,
@@ -1245,10 +1247,6 @@
 
         socket.on('monitoring_started', function(data) {
             if (data.status === 'success') {
-                isMonitoring = true;
-                document.getElementById('startBtn').disabled = true;
-                document.getElementById('stopBtn').disabled = false;
-                document.getElementById('saveBtn').disabled = false;
                 showStatus('监控已启动，正在收集数据...', 'success');
                 document.getElementById('chartsGrid').style.display = 'grid';
                 document.getElementById('currentValues').style.display = 'grid';
@@ -1257,16 +1255,6 @@
                 document.getElementById('tagControls').style.display = 'block';
                 initCharts();
                 enableDoubleClickTags(); // 启用双击标签功能
-            }
-        });
-
-        socket.on('monitoring_stopped', function(data) {
-            if (data.status === 'success') {
-                isMonitoring = false;
-                document.getElementById('startBtn').disabled = false;
-                document.getElementById('stopBtn').disabled = true;
-                document.getElementById('saveBtn').disabled = true;
-                showStatus('监控已停止', 'success');
             }
         });
 
@@ -1280,25 +1268,30 @@
                 time: data.time,
                 cpu: data.cpu,
                 memory: data.memory,
+                fps: data.fps,
                 threads: data.threads,
                 pid: data.pid,
                 name: data.name
             });
-            
+
             // 更新当前值显示
             document.getElementById('currentCpu').textContent = `${data.cpu}%`;
             document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
             document.getElementById('currentThreads').textContent = data.threads;
+            // 更新当前FPS显示
+            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
             
             // 添加数据到图表
             addDataToChart(cpuChart, data.time, data.cpu);
             addDataToChart(memoryChart, data.time, data.memory);
             addDataToChart(threadsChart, data.time, data.threads);
+            // 添加FPS数据到图表
+            addDataToChart(fpsChart, data.time, data.fps);
         });
 
-        socket.on('fps_data', function(data) {
+        /*socket.on('fps_data', function(data) {
             if (!isMonitoring) return;
-            
+
             // 保存到allPerformanceData用于导出
             allPerformanceData.push({
                 type: 'fps',
@@ -1306,13 +1299,13 @@
                 time: data.time,
                 fps: data.fps
             });
-            
+
             // 更新当前FPS显示
             document.getElementById('currentFps').textContent = `${data.fps}FPS`;
-            
+
             // 添加FPS数据到图表
             addDataToChart(fpsChart, data.time, data.fps);
-        });
+        });*/
 
         socket.on('connect', function() {
             console.log('已连接到服务器');
