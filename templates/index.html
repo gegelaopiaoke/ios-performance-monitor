@@ -1424,6 +1424,132 @@
             }
         }
 
+        // CSV数据解析函数
+        function parseCSVData(csvContent) {
+            const lines = csvContent.split('\n');
+            if (lines.length < 2) {
+                throw new Error('CSV文件内容不足');
+            }
+
+            // 解析表头
+            const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+            console.log('CSV Headers:', headers);
+
+            // 验证必要的列是否存在
+            const requiredColumns = ['Timestamp', 'CPU Usage (%)', 'Memory Usage (MB)', 'FPS', 'Thread Count'];
+            const missingColumns = requiredColumns.filter(col => 
+                !headers.some(h => h.includes(col.split(' ')[0]))
+            );
+            
+            if (missingColumns.length > 0) {
+                throw new Error(`CSV文件缺少必要列: ${missingColumns.join(', ')}`);
+            }
+
+            // 解析数据行
+            const data = [];
+            const scenes = [];
+            const tags = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue; // 跳过空行
+
+                // 简单的CSV解析（处理逗号分隔）
+                const values = parseCSVLine(line);
+                if (values.length < headers.length) continue;
+
+                try {
+                    // 创建数据记录
+                    const record = {
+                        timestamp: values[0].replace(/"/g, ''),
+                        cpu: parseFloat(values[2]) || 0,
+                        memory: parseFloat(values[3]) || 0,
+                        fps: parseFloat(values[4]) || 0,
+                        threads: parseInt(values[5]) || 0
+                    };
+
+                    data.push(record);
+
+                    // 处理场景信息（如果有）
+                    if (values.length > 6 && values[6] && values[6].trim() !== '') {
+                        const sceneName = values[6].replace(/"/g, '').trim();
+                        // 避免重复场景
+                        if (!scenes.some(s => s.name === sceneName)) {
+                            scenes.push({
+                                name: sceneName,
+                                startTime: record.timestamp,
+                                endTime: record.timestamp // 将在后面更新
+                            });
+                        } else {
+                            // 更新场景结束时间
+                            const scene = scenes.find(s => s.name === sceneName);
+                            if (scene) {
+                                scene.endTime = record.timestamp;
+                            }
+                        }
+                    }
+
+                    // 处理标签信息（如果有）
+                    if (values.length > 7 && values[7] && values[7].trim() !== '') {
+                        const tagNote = values[7].replace(/"/g, '').trim();
+                        tags.push({
+                            time: record.timestamp,
+                            note: tagNote,
+                            id: 'csv_tag_' + Date.now() + '_' + i
+                        });
+                    }
+                } catch (err) {
+                    console.warn(`跳过第${i+1}行数据，解析错误:`, err);
+                }
+            }
+
+            return {
+                data: data,
+                scenes: scenes,
+                tags: tags,
+                summary: {
+                    total_records: data.length,
+                    total_scenes: scenes.length,
+                    total_tags: tags.length
+                }
+            };
+        }
+
+        // 解析CSV行（处理引号和逗号）
+        function parseCSVLine(line) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            let i = 0;
+
+            while (i < line.length) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    if (inQuotes && line[i + 1] === '"') {
+                        // 转义的引号
+                        current += '"';
+                        i += 2;
+                    } else {
+                        // 开始或结束引号
+                        inQuotes = !inQuotes;
+                        i++;
+                    }
+                } else if (char === ',' && !inQuotes) {
+                    // 字段分隔符
+                    result.push(current);
+                    current = '';
+                    i++;
+                } else {
+                    current += char;
+                    i++;
+                }
+            }
+            
+            result.push(current); // 最后一个字段
+            return result;
+        }
+
         // 导入数据函数
         function importData(event) {
             const file = event.target.files[0];
@@ -1432,9 +1558,19 @@
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const importedData = JSON.parse(e.target.result);
+                    const fileContent = e.target.result;
+                    let importedData;
                     
-                    if (!importedData.data || !Array.isArray(importedData.data)) {
+                    // 根据文件扩展名或内容判断格式
+                    if (file.name.toLowerCase().endsWith('.csv') || fileContent.startsWith('Timestamp,')) {
+                        // CSV格式导入
+                        importedData = parseCSVData(fileContent);
+                    } else {
+                        // JSON格式导入
+                        importedData = JSON.parse(fileContent);
+                    }
+                    
+                    if (!importedData || !importedData.data || !Array.isArray(importedData.data)) {
                         showStatus('无效的数据文件格式', 'error');
                         return;
                     }
