@@ -571,12 +571,30 @@
         <div class="controls">
             <h3>🔧 监控配置</h3>
             <div class="form-group">
-                <label for="udid">设备UDID（可选）:</label>
-                <input type="text" id="udid" value="00008020-000A09960121002E" placeholder="留空使用默认设备">
+                <label for="deviceSelect">选择设备:</label>
+                <select id="deviceSelect" onchange="onDeviceChanged()">
+                    <option value="">检测中...</option>
+                </select>
+                <button type="button" onclick="refreshDevices()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #007AFF; background: #007AFF; color: white; border-radius: 6px; cursor: pointer;">刷新设备</button>
             </div>
             <div class="form-group">
+                <label for="appSearch">搜索应用:</label>
+                <input type="text" id="appSearch" placeholder="输入应用名称或Bundle ID搜索..." oninput="filterApps()">
+            </div>
+            <div class="form-group">
+                <label for="appSelect">选择应用:</label>
+                <select id="appSelect" size="8" style="width: 100%; height: 200px;" onchange="onAppSelected()">
+                    <option value="">请先选择设备</option>
+                </select>
+                <button type="button" onclick="refreshApps()" style="margin-top: 8px; padding: 8px 12px; border: 1px solid #007AFF; background: #007AFF; color: white; border-radius: 6px; cursor: pointer;">刷新应用列表</button>
+            </div>
+            <div class="form-group" style="display: none;">
+                <label for="udid">设备UDID:</label>
+                <input type="text" id="udid" readonly>
+            </div>
+            <div class="form-group" style="display: none;">
                 <label for="bundleId">应用Bundle ID:</label>
-                <input type="text" id="bundleId" value="com.newleaf.app.ios.vic" placeholder="默认应用">
+                <input type="text" id="bundleId" readonly>
             </div>
             <button class="btn" id="startBtn" onclick="startMonitoring()">开始监控</button>
             <button class="btn" id="stopBtn" onclick="stopMonitoring()" disabled>停止监控</button>
@@ -885,7 +903,18 @@
 
     <script>
         // WebSocket连接
-        const socket = io();
+        // 优化Socket.IO连接，减少延迟
+        const socket = io({
+            transports: ['websocket'],  // 强制使用WebSocket，避免轮询
+            upgrade: false,             // 不进行传输升级
+            rememberUpgrade: false,     // 不记住升级
+            forceNew: true,             // 强制新连接
+            timeout: 1000,              // 连接超时1秒
+            pingTimeout: 5000,          // ping超时5秒
+            pingInterval: 1000,         // 每1秒ping一次
+            maxHttpBufferSize: 1e6,     // 1MB缓冲区
+            connectTimeout: 1000        // 连接超时1秒
+        });
         
         // 图表实例
         let cpuChart, memoryChart, fpsChart, threadsChart;
@@ -895,6 +924,11 @@
         let windowSize = 50; // 显示窗口大小
         let timePosition = 100; // 时间位置百分比，100表示最新
         let allPerformanceData = []; // 存储所有性能数据用于保存
+        
+        // 设备和应用管理
+        let connectedDevices = [];
+        let installedApps = [];
+        let allApps = []; // 存储完整应用列表用于搜索
         
         // 性能阈值配置
         let thresholds = {
@@ -1183,9 +1217,9 @@
                 allThreadsData.push(data);
             }
             
-            // 如果正在跟随最新数据，更新显示
+            // 如果正在跟随最新数据，立即更新显示（无延迟）
             if (isFollowingLatest) {
-                updateChartDisplay();
+                updateChartDisplay(); // 直接调用，不使用requestAnimationFrame
             }
             
             // 更新标签位置（仅在CPU图表更新时执行，避免重复）
@@ -1696,10 +1730,171 @@
             }
         }
 
+        // 设备和应用管理函数
+        async function refreshDevices() {
+            try {
+                console.log('开始获取设备列表...');
+                showStatus('正在检测设备...', 'info');
+                
+                const response = await fetch('/api/devices');
+                console.log('API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('API返回数据:', data);
+                
+                if (!data.success) {
+                    throw new Error(data.error || '获取设备失败');
+                }
+                
+                connectedDevices = data.devices;
+                
+                const deviceSelect = document.getElementById('deviceSelect');
+                deviceSelect.innerHTML = '';
+                
+                if (connectedDevices.length === 0) {
+                    deviceSelect.innerHTML = '<option value="">未检测到设备</option>';
+                    showStatus('未检测到iOS设备，请确保设备已连接并信任此电脑', 'warning');
+                } else {
+                    connectedDevices.forEach(device => {
+                        const option = document.createElement('option');
+                        option.value = device.UniqueDeviceID;
+                        // 尝试从不同位置获取设备名称
+                        const deviceName = device.Properties?.DeviceName || device.DeviceName || '未知设备';
+                        option.textContent = `${deviceName} (${device.UniqueDeviceID.substring(0, 8)}...)`;
+                        deviceSelect.appendChild(option);
+                    });
+                    
+                    // 自动选择第一个设备
+                    if (connectedDevices.length > 0) {
+                        deviceSelect.value = connectedDevices[0].UniqueDeviceID;
+                        showStatus(`检测到 ${connectedDevices.length} 个设备`, 'success');
+                        onDeviceChanged();
+                    }
+                }
+            } catch (error) {
+                console.error('获取设备失败:', error);
+                showStatus('获取设备失败: ' + error.message, 'error');
+                
+                const deviceSelect = document.getElementById('deviceSelect');
+                deviceSelect.innerHTML = '<option value="">获取设备失败</option>';
+            }
+        }
+        
+        async function onDeviceChanged() {
+            const deviceSelect = document.getElementById('deviceSelect');
+            const selectedUdid = deviceSelect.value;
+            
+            document.getElementById('udid').value = selectedUdid;
+            
+            if (selectedUdid) {
+                await refreshApps();
+            } else {
+                const appSelect = document.getElementById('appSelect');
+                appSelect.innerHTML = '<option value="">请先选择设备</option>';
+            }
+        }
+        
+        async function refreshApps() {
+            const selectedUdid = document.getElementById('deviceSelect').value;
+            if (!selectedUdid) {
+                showStatus('请先选择设备', 'error');
+                return;
+            }
+            
+            try {
+                showStatus('正在获取应用列表...', 'info');
+                console.log('开始获取应用列表，UDID:', selectedUdid);
+                
+                const response = await fetch(`/api/apps?udid=${selectedUdid}`);
+                console.log('应用API响应状态:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('应用API返回数据:', data);
+                
+                if (!data.success) {
+                    throw new Error(data.error || '获取应用列表失败');
+                }
+                
+                allApps = data.apps;
+                installedApps = allApps; // 初始显示所有应用
+                
+                updateAppList();
+                
+                if (allApps.length === 0) {
+                    showStatus('该设备上未找到应用，可能需要信任此电脑或应用获取权限', 'warning');
+                } else {
+                    showStatus(`获取到 ${allApps.length} 个应用`, 'success');
+                }
+            } catch (error) {
+                console.error('获取应用失败:', error);
+                showStatus('获取应用失败: ' + error.message, 'error');
+                
+                const appSelect = document.getElementById('appSelect');
+                appSelect.innerHTML = '<option value="">获取应用失败</option>';
+            }
+        }
+        
+        function updateAppList() {
+            const appSelect = document.getElementById('appSelect');
+            appSelect.innerHTML = '';
+            
+            if (installedApps.length === 0) {
+                appSelect.innerHTML = '<option value="">未找到应用</option>';
+                return;
+            }
+            
+            installedApps.forEach(app => {
+                const option = document.createElement('option');
+                option.value = app.bundle_id;
+                option.textContent = `${app.name} (${app.bundle_id})`;
+                option.title = `版本: ${app.version}`;
+                appSelect.appendChild(option);
+            });
+        }
+        
+        function filterApps() {
+            const searchText = document.getElementById('appSearch').value.toLowerCase();
+            
+            if (searchText === '') {
+                installedApps = allApps;
+            } else {
+                installedApps = allApps.filter(app => 
+                    app.name.toLowerCase().includes(searchText) || 
+                    app.bundle_id.toLowerCase().includes(searchText)
+                );
+            }
+            
+            updateAppList();
+        }
+        
+        function onAppSelected() {
+            const appSelect = document.getElementById('appSelect');
+            const selectedBundleId = appSelect.value;
+            document.getElementById('bundleId').value = selectedBundleId;
+        }
+
         // 开始监控
         function startMonitoring() {
             const udid = document.getElementById('udid').value.trim();
             const bundleId = document.getElementById('bundleId').value.trim();
+            
+            if (!udid) {
+                showStatus('请先选择设备', 'error');
+                return;
+            }
+            
+            if (!bundleId) {
+                showStatus('请先选择应用', 'error');
+                return;
+            }
             
             showStatus('正在启动监控...', 'info');
             
@@ -2101,6 +2296,7 @@
 
         socket.on('monitoring_started', function(data) {
             if (data.status === 'success') {
+                isMonitoring = true;  // 重要：设置监控状态为true
                 showStatus('监控已启动，正在收集数据...', 'success');
                 document.getElementById('chartsGrid').style.display = 'grid';
                 document.getElementById('currentValues').style.display = 'grid';
@@ -2116,6 +2312,18 @@
         socket.on('performance_data', function(data) {
             if (!isMonitoring) return;
             
+            // 立即更新当前值显示（同步，无延迟）
+            document.getElementById('currentCpu').textContent = `${data.cpu}%`;
+            document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
+            document.getElementById('currentThreads').textContent = data.threads;
+            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
+            
+            // 立即添加数据到图表（同步，无延迟）
+            addDataToChart(cpuChart, data.time, data.cpu);
+            addDataToChart(memoryChart, data.time, data.memory);
+            addDataToChart(threadsChart, data.time, data.threads);
+            addDataToChart(fpsChart, data.time, data.fps);
+            
             // 保存到allPerformanceData用于导出
             allPerformanceData.push({
                 type: 'performance',
@@ -2128,32 +2336,18 @@
                 pid: data.pid,
                 name: data.name
             });
-
-            // 更新当前值显示
-            document.getElementById('currentCpu').textContent = `${data.cpu}%`;
-            document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
-            document.getElementById('currentThreads').textContent = data.threads;
-            // 更新当前FPS显示
-            document.getElementById('currentFps').textContent = `${data.fps}FPS`;
             
-            // 添加数据到图表
-            addDataToChart(cpuChart, data.time, data.cpu);
-            addDataToChart(memoryChart, data.time, data.memory);
-            addDataToChart(threadsChart, data.time, data.threads);
-            // 添加FPS数据到图表
-            addDataToChart(fpsChart, data.time, data.fps);
-            
-            // 更新性能统计分析
-            updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads);
-            
-            // 检查性能阈值告警
-            checkPerformanceThresholds(data.cpu, data.memory, data.fps || 0, data.threads);
-            
-            // 专业级内存泄漏检测 (传递所有性能参数)
-            detectMemoryLeak(data.memory, data.cpu, data.fps || 0, data.threads);
-            
-            // 更新实时评分
-            updatePerformanceScores();
+            // 降低统计更新频率，但不影响主要数据显示
+            if (!window.statsUpdatePending) {
+                window.statsUpdatePending = true;
+                setTimeout(() => {
+                    updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads);
+                    checkPerformanceThresholds(data.cpu, data.memory, data.fps || 0, data.threads);
+                    detectMemoryLeak(data.memory, data.cpu, data.fps || 0, data.threads);
+                    updatePerformanceScores();
+                    window.statsUpdatePending = false;
+                }, 500); // 500ms批量更新一次统计数据（不影响主要显示）
+            }
         });
 
         /*socket.on('fps_data', function(data) {
@@ -3362,6 +3556,11 @@
             document.getElementById('stopScenarioBtn').disabled = true;
             updateScenarioStatus('⏸️', '监控已停止', 0);
             addScenarioLog('⏸️ 性能监控已停止，测试场景功能暂停');
+        });
+        
+        // 页面加载完成后自动检测设备
+        document.addEventListener('DOMContentLoaded', function() {
+            refreshDevices();
         });
     </script>
 </body>

@@ -26,23 +26,19 @@ except ImportError:
     subprocess.check_call([sys.executable, "-m", "pip", "install", "pymobiledevice3"])
 
 from ios_device.cli.base import InstrumentsBase
+from ios_device.cli.cli import print_json
 from ios_device.util.utils import convertBytes
 from ios_device.remote.remote_lockdown import RemoteLockdownClient
 
-# 导入应用控制相关模块
-try:
-    from pymobiledevice3.services.installation_proxy import InstallationProxyService
-    from pymobiledevice3.lockdown import create_using_usbmux
-    # SpringBoardService 在新版本中可能不可用，我们用其他方法
-    SpringBoardService = None
-except ImportError as e:
-    print(f"警告: 无法导入pymobiledevice3服务: {e}")
-    create_using_usbmux = None
-    SpringBoardService = None
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'ios_performance_monitor'
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, 
+                  cors_allowed_origins="*",
+                  ping_timeout=5,          # 5秒ping超时
+                  ping_interval=1,         # 1秒ping间隔
+                  max_http_buffer_size=1024*1024,  # 1MB缓冲区
+                  async_mode='threading')  # 使用线程模式确保实时性
 
 # 全局变量存储性能数据
 performance_data = {
@@ -107,6 +103,7 @@ class WebPerformanceAnalyzer(object):
         """ Get application performance data - 与main.py逻辑完全一致 """
         proc_filter = ['Pid', 'Name', 'CPU', 'Memory', 'DiskReads', 'DiskWrites', 'Threads']
         process_attributes = dataclasses.make_dataclass('SystemProcessAttributes', proc_filter)
+        format = "json"
 
         def on_callback_proc_message(res):
             # 检查监控是否仍在激活状态
@@ -130,7 +127,7 @@ class WebPerformanceAnalyzer(object):
                             attrs.Memory = convertBytes(attrs.Memory)
                             attrs.DiskReads = convertBytes(attrs.DiskReads)
                             attrs.DiskWrites = convertBytes(attrs.DiskWrites)
-                            attrs.FPS = self.fps
+                            attrs.FPS = self.fps if self.fps is not None else 0
                             attrs.Time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                             
                             # 发送数据到Web界面
@@ -143,10 +140,12 @@ class WebPerformanceAnalyzer(object):
                                 'pid': attrs.Pid,
                                 'name': attrs.Name
                             }
+                            # 立即发送数据，强制实时传输
                             socketio.emit('performance_data', data)
+                            socketio.sleep(0)  # 强制flush
                             
                             # 同时保持原始的print_json输出（完全一致）
-                            print(json.dumps(attrs.__dict__))
+                            print_json(attrs.__dict__, format)
 
         with RemoteLockdownClient((self.host, self.port)) as rsd:
             with InstrumentsBase(udid=self.udid, network=False, lockdown=rsd) as rpc:
@@ -162,6 +161,7 @@ class WebPerformanceAnalyzer(object):
 
     def ios17_fps_perf(self):
         """ Get fps data - 与main.py逻辑完全一致 """
+        format = "json"
 
         def on_callback_fps_message(res):
             # 检查监控是否仍在激活状态
@@ -172,7 +172,7 @@ class WebPerformanceAnalyzer(object):
             self.fps = data['CoreAnimationFramesPerSecond']
             
             # 同时保持原始的print_json输出（完全一致）
-            print(json.dumps({"currentTime": str(datetime.now()), "fps": self.fps}))
+            print_json({"currentTime": str(datetime.now()), "fps": data['CoreAnimationFramesPerSecond']}, format)
 
         with RemoteLockdownClient((self.host, self.port)) as rsd:
             with InstrumentsBase(udid=self.udid, network=False, lockdown=rsd) as rpc:
@@ -460,10 +460,297 @@ def run_with_admin_privileges(command):
             subprocess.run(['sudo', sys.executable] + command, check=True)
 
 
+# 设备和应用检测功能
+def get_device_name(udid):
+    """获取设备名称"""
+    try:
+        # 尝试使用pymobiledevice3获取设备信息
+        result = subprocess.run([
+            sys.executable, '-m', 'pymobiledevice3', 'lockdown', 'query', '--udid', udid, 'DeviceName'
+        ], capture_output=True, text=True, timeout=5)
+        
+        if result.returncode == 0 and result.stdout.strip():
+            return result.stdout.strip()
+            
+        # 如果失败，尝试其他方法
+        result2 = subprocess.run([
+            sys.executable, '-m', 'pymobiledevice3', 'info', '--udid', udid
+        ], capture_output=True, text=True, timeout=5)
+        
+        if result2.returncode == 0:
+            # 解析输出中的设备名称
+            lines = result2.stdout.split('\n')
+            for line in lines:
+                if 'DeviceName' in line:
+                    return line.split(':')[-1].strip()
+                    
+    except Exception as e:
+        print(f"获取设备名称失败: {e}")
+    
+    return None
+
+def get_connected_devices():
+    """获取已连接的iOS设备列表"""
+    try:
+        print("DEBUG: 开始获取设备列表...")
+        
+        # 尝试多种命令格式
+        commands = [
+            [sys.executable, '-m', 'pymobiledevice3', 'usbmux', 'list'],
+            [sys.executable, '-m', 'pymobiledevice3', 'list', 'devices'],
+            ['pymobiledevice3', 'usbmux', 'list'],
+            ['tidevice', 'list']
+        ]
+        
+        for i, cmd in enumerate(commands):
+            try:
+                print(f"DEBUG: 尝试命令 {i+1}: {' '.join(cmd)}")
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                
+                print(f"DEBUG: 命令 {i+1} 返回码: {result.returncode}")
+                print(f"DEBUG: 命令 {i+1} 标准输出: {result.stdout}")
+                if result.stderr:
+                    print(f"DEBUG: 命令 {i+1} 标准错误: {result.stderr}")
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    try:
+                        import json
+                        devices = json.loads(result.stdout)
+                        print(f"DEBUG: 成功解析到 {len(devices)} 个设备")
+                        
+                        # 设备信息已经包含在原始数据中
+                        for device in devices:
+                            # 如果设备信息中已有DeviceName，使用它
+                            if 'DeviceName' in device and device['DeviceName']:
+                                if 'Properties' not in device:
+                                    device['Properties'] = {}
+                                device['Properties']['DeviceName'] = device['DeviceName']
+                        
+                        return devices
+                    except json.JSONDecodeError:
+                        # 如果不是JSON格式，尝试其他解析方式
+                        if 'tidevice' in cmd[0]:
+                            # tidevice的输出格式不同
+                            lines = result.stdout.strip().split('\n')
+                            devices = []
+                            for line in lines:
+                                if line and not line.startswith('List'):
+                                    parts = line.split()
+                                    if len(parts) >= 2:
+                                        devices.append({
+                                            'UniqueDeviceID': parts[0],
+                                            'Properties': {'DeviceName': parts[1] if len(parts) > 1 else '未知设备'}
+                                        })
+                            return devices
+                        continue
+            except FileNotFoundError:
+                print(f"DEBUG: 命令 {i+1} 未找到")
+                continue
+            except Exception as e:
+                print(f"DEBUG: 命令 {i+1} 执行失败: {e}")
+                continue
+        
+        print("DEBUG: 所有命令都失败了")
+        return []
+        
+    except Exception as e:
+        print(f"获取设备列表时出错: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+def get_installed_apps(udid=None, emit_progress=True):
+    """获取设备上安装的所有应用"""
+    try:
+        print(f"DEBUG: 开始获取应用列表，UDID: {udid}")
+        if emit_progress:
+            socketio.emit('app_fetch_progress', {'status': 'starting', 'message': '开始获取应用列表...'})
+        
+        # 尝试多种命令格式获取应用列表，优先使用tidevice
+        commands = [
+            ['tidevice', '--udid', udid, 'applist'] if udid else ['tidevice', 'applist'],
+            ['tidevice', 'applist'],
+            [sys.executable, '-m', 'pymobiledevice3', 'apps', 'list', '--udid', udid] if udid else None,
+            [sys.executable, '-m', 'pymobiledevice3', 'apps', 'list']
+        ]
+        
+        # 过滤掉None值
+        commands = [cmd for cmd in commands if cmd is not None]
+        
+        for i, cmd in enumerate(commands):
+            try:
+                # 如果udid为空，跳过包含udid的命令
+                if not udid and '--udid' in cmd:
+                    continue
+                    
+                print(f"DEBUG: 尝试应用命令 {i+1}: {' '.join(cmd)}")
+                if emit_progress:
+                    socketio.emit('app_fetch_progress', {
+                        'status': 'fetching', 
+                        'message': f'尝试命令 {i+1}: {cmd[0]}...',
+                        'command': i+1
+                    })
+                
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+                
+                print(f"DEBUG: 应用命令 {i+1} 返回码: {result.returncode}")
+                if result.stderr:
+                    print(f"DEBUG: 应用命令 {i+1} 标准错误: {result.stderr}")
+                
+                if result.returncode == 0 and result.stdout.strip():
+                    try:
+                        import json
+                        apps = json.loads(result.stdout)
+                        print(f"DEBUG: 成功解析到 {len(apps)} 个应用")
+                        if emit_progress:
+                            socketio.emit('app_fetch_progress', {
+                                'status': 'parsing', 
+                                'message': f'正在解析 {len(apps)} 个应用...',
+                                'total': len(apps)
+                            })
+                        
+                        # 打印前几个应用的样本数据用于调试
+                        if apps:
+                            print(f"DEBUG: 第一个应用数据类型: {type(apps[0])}")
+                            print(f"DEBUG: 第一个应用数据内容: {apps[0] if len(str(apps[0])) < 200 else str(apps[0])[:200] + '...'}")
+                            if len(apps) > 1:
+                                print(f"DEBUG: 第二个应用数据类型: {type(apps[1])}")
+                                print(f"DEBUG: 第二个应用数据内容: {apps[1] if len(str(apps[1])) < 200 else str(apps[1])[:200] + '...'}")
+                        
+                        # 提取应用信息
+                        app_list = []
+                        for app in apps:
+                            try:
+                                # 检查应用数据类型
+                                if isinstance(app, str):
+                                    # 如果是字符串，可能是Bundle ID
+                                    app_list.append({
+                                        'bundle_id': app,
+                                        'name': app.split('.')[-1],  # 使用Bundle ID的最后部分作为名称
+                                        'version': '',
+                                        'executable': ''
+                                    })
+                                elif isinstance(app, dict):
+                                    # 处理字典格式的应用信息
+                                    bundle_id = app.get('CFBundleIdentifier') or app.get('bundleId') or app.get('id')
+                                    display_name = (app.get('CFBundleDisplayName') or 
+                                                  app.get('CFBundleName') or 
+                                                  app.get('name') or 
+                                                  app.get('displayName') or
+                                                  bundle_id)
+                                    
+                                    if bundle_id:
+                                        app_list.append({
+                                            'bundle_id': bundle_id,
+                                            'name': display_name or bundle_id.split('.')[-1],
+                                            'version': (app.get('CFBundleShortVersionString') or 
+                                                      app.get('CFBundleVersion') or 
+                                                      app.get('version') or ''),
+                                            'executable': app.get('CFBundleExecutable', '')
+                                        })
+                                else:
+                                    print(f"DEBUG: 未知应用数据类型: {type(app)}, 内容: {app}")
+                            except Exception as e:
+                                print(f"DEBUG: 处理应用数据失败: {e}, 应用数据: {app}")
+                        
+                        return sorted(app_list, key=lambda x: x['name'].lower())
+                        
+                    except json.JSONDecodeError as e:
+                        print(f"DEBUG: JSON解析失败: {e}")
+                        # 如果是tidevice的非JSON输出，尝试解析文本格式
+                        if 'tidevice' in cmd[0]:
+                            print(f"DEBUG: tidevice原始输出: {result.stdout[:500]}")
+                            lines = result.stdout.strip().split('\n')
+                            app_list = []
+                            for line in lines:
+                                line = line.strip()
+                                # 跳过空行和警告信息
+                                if (not line or 
+                                    line.startswith('/opt/homebrew') or 
+                                    'UserWarning' in line or
+                                    'pkg_resources' in line or
+                                    'import pkg_resources' in line or
+                                    'setuptools' in line):
+                                    continue
+                                
+                                # tidevice的输出格式: bundle_id 应用名称 版本号
+                                parts = line.split(' ', 2)  # 只分割前两个空格
+                                if len(parts) >= 2:
+                                    bundle_id = parts[0]
+                                    # 处理应用名称和版本（可能包含空格）
+                                    rest = parts[1] if len(parts) > 1 else ''
+                                    # 尝试从末尾提取版本号
+                                    words = rest.split()
+                                    if len(words) > 1:
+                                        # 假设最后一个部分是版本号
+                                        version = words[-1]
+                                        name = ' '.join(words[:-1])
+                                    else:
+                                        name = rest
+                                        version = ''
+                                    
+                                    if bundle_id and name:
+                                        app_list.append({
+                                            'bundle_id': bundle_id,
+                                            'name': name,
+                                            'version': version,
+                                            'executable': ''
+                                        })
+                                        
+                            print(f"DEBUG: tidevice解析到 {len(app_list)} 个应用")
+                            if app_list:
+                                print(f"DEBUG: 前3个应用示例: {app_list[:3]}")
+                            return sorted(app_list, key=lambda x: x['name'].lower())
+                        continue
+                        
+            except FileNotFoundError:
+                print(f"DEBUG: 应用命令 {i+1} 未找到")
+                continue
+            except Exception as e:
+                print(f"DEBUG: 应用命令 {i+1} 执行失败: {e}")
+                continue
+        
+        print("DEBUG: 所有应用命令都失败了")
+        return []
+        
+    except Exception as e:
+        print(f"获取应用列表时出错: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
 # Web路由
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/devices')
+def api_devices():
+    """API：获取设备列表"""
+    try:
+        devices = get_connected_devices()
+        print(f"DEBUG: API返回 {len(devices)} 个设备")
+        return {'devices': devices, 'success': True}
+    except Exception as e:
+        print(f"API获取设备失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'devices': [], 'success': False, 'error': str(e)}
+
+@app.route('/api/apps')
+def api_apps():
+    """API：获取应用列表"""
+    try:
+        udid = request.args.get('udid')
+        print(f"DEBUG: API获取应用列表，UDID: {udid}")
+        apps = get_installed_apps(udid)
+        print(f"DEBUG: API返回 {len(apps)} 个应用")
+        return {'apps': apps, 'success': True}
+    except Exception as e:
+        print(f"API获取应用失败: {e}")
+        import traceback
+        traceback.print_exc()
+        return {'apps': [], 'success': False, 'error': str(e)}
 
 @socketio.on('start_monitoring')
 def handle_start_monitoring(data):
