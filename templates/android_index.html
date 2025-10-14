@@ -25,13 +25,13 @@
             color: #1d1d1f;
             margin-bottom: 10px;
         }
-        .controls, .chart-container {
+        .controls, .chart-container, .thread-distribution {
             position: relative;
             cursor: move;
             transition: transform 0.2s ease;
         }
         
-        .controls h3::before, .chart-container h3::before {
+        .controls h3::before, .chart-container h3::before, .thread-distribution h3::before {
             content: '⋮⋮';
             position: absolute;
             left: -20px;
@@ -40,7 +40,13 @@
             color: #ccc;
         }
         
-        .controls.dragging, .chart-container.dragging {
+        /* 统计面板禁止拖拽，移除拖拽手柄 */
+        .statistics-panel {
+            position: relative;
+            cursor: default;
+        }
+        
+        .controls.dragging, .chart-container.dragging, .thread-distribution.dragging {
             transform: rotate(5deg);
             opacity: 0.8;
             z-index: 1000;
@@ -201,28 +207,56 @@
         .hidden {
             display: none;
         }
+        .statistics-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .statistics-panel h3 {
+            margin: 0 0 20px 0;
+            color: #1d1d1f;
+            font-size: 18px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-current {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 5px;
+        }
+        .stat-details {
+            font-size: 11px;
+            color: #86868b;
+        }
         .thread-distribution {
             background: white;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             margin-bottom: 30px;
-            position: relative;
-            cursor: move;
-            transition: transform 0.2s ease;
         }
-        .thread-distribution h3::before {
-            content: '⋮⋮';
-            position: absolute;
-            left: -20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #ccc;
-        }
-        .thread-distribution.dragging {
-            transform: rotate(5deg);
-            opacity: 0.8;
-            z-index: 1000;
+        .thread-distribution h3 {
+            margin: 0 0 20px 0;
+            color: #1d1d1f;
+            font-size: 18px;
         }
         .thread-list {
             max-height: 400px;
@@ -331,7 +365,7 @@
             <h3>📱 设备与应用控制</h3>
             <div class="form-group">
                 <label for="deviceSelect">选择Android设备:</label>
-                <select id="deviceSelect">
+                <select id="deviceSelect" onchange="onDeviceChanged()">
                     <option value="">请先刷新设备列表</option>
                 </select>
                 <button type="button" onclick="refreshDevices()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #007AFF; background: #007AFF; color: white; border-radius: 6px; cursor: pointer;">刷新设备</button>
@@ -380,49 +414,7 @@
             </div>
         </div>
 
-        <div class="chart-container" id="cpuChart-container" draggable="true">
-            <h3>📊 CPU使用率</h3>
-            <div class="chart-wrapper" data-chart="cpu">
-                <canvas id="cpuChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container" id="memoryChart-container" draggable="true">
-            <h3>🧠 内存使用量</h3>
-            <div class="chart-wrapper" data-chart="memory">
-                <canvas id="memoryChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container" id="fpsChart-container" draggable="true">
-            <h3>🎮 帧率</h3>
-            <div class="chart-wrapper" data-chart="fps">
-                <canvas id="fpsChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container" id="threadsChart-container" draggable="true">
-            <h3>🧵 线程数量</h3>
-            <div class="chart-wrapper" data-chart="threads">
-                <canvas id="threadsChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container" id="diskReadsChart-container" draggable="true">
-            <h3>📥 磁盘读取</h3>
-            <div class="chart-wrapper" data-chart="disk_reads">
-                <canvas id="diskReadsChart"></canvas>
-            </div>
-        </div>
-
-        <div class="chart-container" id="diskWritesChart-container" draggable="true">
-            <h3>📤 磁盘写入</h3>
-            <div class="chart-wrapper" data-chart="disk_writes">
-                <canvas id="diskWritesChart"></canvas>
-            </div>
-        </div>
-
-        <div class="statistics-panel" id="statisticsPanel" draggable="true">
+        <div class="statistics-panel" id="statisticsPanel" draggable="false">
             <h3>📈 数据统计</h3>
             <div class="stats-grid">
                 <div class="stat-card">
@@ -473,6 +465,48 @@
                         最大: <span id="statDiskWritesMax">0MB</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="chart-container" id="cpuChart-container" draggable="true">
+            <h3>📊 CPU使用率</h3>
+            <div class="chart-wrapper" data-chart="cpu">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="memoryChart-container" draggable="true">
+            <h3>🧠 内存使用量</h3>
+            <div class="chart-wrapper" data-chart="memory">
+                <canvas id="memoryChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="fpsChart-container" draggable="true">
+            <h3>🎮 帧率</h3>
+            <div class="chart-wrapper" data-chart="fps">
+                <canvas id="fpsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="threadsChart-container" draggable="true">
+            <h3>🧵 线程数量</h3>
+            <div class="chart-wrapper" data-chart="threads">
+                <canvas id="threadsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="diskReadsChart-container" draggable="true">
+            <h3>📥 磁盘读取</h3>
+            <div class="chart-wrapper" data-chart="disk_reads">
+                <canvas id="diskReadsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="diskWritesChart-container" draggable="true">
+            <h3>📤 磁盘写入</h3>
+            <div class="chart-wrapper" data-chart="disk_writes">
+                <canvas id="diskWritesChart"></canvas>
             </div>
         </div>
 

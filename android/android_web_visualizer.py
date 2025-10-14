@@ -14,7 +14,15 @@ from datetime import datetime
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 
-app = Flask(__name__)
+import os
+
+# 获取项目根目录路径
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# 配置Flask应用，指定模板和静态文件路径
+app = Flask(__name__, 
+           template_folder=os.path.join(project_root, 'templates'),
+           static_folder=os.path.join(project_root, 'static'))
 app.config['SECRET_KEY'] = 'android_performance_monitor'
 socketio = SocketIO(app, 
                   cors_allowed_origins="*",
@@ -39,10 +47,6 @@ performance_data = {
 monitoring_active = True
 monitoring_threads = []
 performance_analyzer = None
-
-# 测试场景管理
-current_test_scenario = None
-scenario_automation = None
 
 
 # Android设备管理类
@@ -147,9 +151,10 @@ class AndroidPerformanceAnalyzer(object):
         self.is_monitoring = False
         self.fps = 0
         self.monitoring_thread = None
+        self.last_thread_update = 0  # 添加缺失的属性
         
     def get_installed_packages(self):
-        """获取已安装的应用包列表"""
+        """获取已安装的应用包列表（包含应用名称）"""
         try:
             cmd = ['adb']
             if self.device_id:
@@ -172,6 +177,36 @@ class AndroidPerformanceAnalyzer(object):
         except Exception as e:
             print(f"❌ 获取应用列表时出错: {e}")
             return []
+    
+    def get_app_name(self, package_name):
+        """获取应用的显示名称"""
+        try:
+            cmd = ['adb']
+            if self.device_id:
+                cmd.extend(['-s', self.device_id])
+            cmd.extend(['shell', 'dumpsys', 'package', package_name])
+            
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            
+            if result.returncode == 0:
+                # 从 dumpsys 输出中提取 labelRes 或 applicationInfo 的应用名
+                lines = result.stdout.split('\n')
+                for i, line in enumerate(lines):
+                    # 尝试找到 applicationLabel
+                    if 'applicationLabel=' in line:
+                        app_name = line.split('applicationLabel=')[1].strip()
+                        if app_name:
+                            return app_name
+                
+                # 如果没找到，使用 aapt 获取应用名称（但这需要 apk 路径）
+                # 最后的备用方案：从包名提取最后一段作为显示名
+                return package_name.split('.')[-1].capitalize()
+            
+            return package_name.split('.')[-1].capitalize()
+                
+        except Exception as e:
+            print(f"⚠️ 获取应用名称时出错 ({package_name}): {e}")
+            return package_name.split('.')[-1].capitalize()
     
     def get_app_pid(self, package_name):
         """获取应用的PID"""
@@ -689,14 +724,14 @@ def index():
 @socketio.on('connect')
 def handle_connect():
     """客户端连接"""
-    print(f"📱 客户端已连接: {request.sid}")
+    print(f"📱 客户端已连接")
     emit('status', {'message': 'Android性能监控已连接', 'type': 'success'})
 
 
 @socketio.on('disconnect')
 def handle_disconnect():
     """客户端断开连接"""
-    print(f"📱 客户端已断开: {request.sid}")
+    print(f"📱 客户端已断开")
 
 
 @socketio.on('get_devices')
@@ -740,9 +775,18 @@ def handle_get_apps(data):
         analyzer = AndroidPerformanceAnalyzer(device_id)
         packages = analyzer.get_installed_packages()
         
-        # 只返回包名，不做额外处理
-        apps = [{'package_name': pkg, 'display_name': pkg} for pkg in packages]
+        # 获取每个应用的真实名称
+        apps = []
+        print(f"🔍 获取 {len(packages)} 个应用的名称...")
+        for pkg in packages:
+            app_name = analyzer.get_app_name(pkg)
+            apps.append({
+                'package_name': pkg,
+                'app_name': app_name,
+                'display_name': f"{app_name} ({pkg})"  # 保留 display_name 以兼容
+            })
         
+        print(f"✅ 成功获取 {len(apps)} 个应用")
         emit('apps_list', {'apps': apps})
         
     except Exception as e:

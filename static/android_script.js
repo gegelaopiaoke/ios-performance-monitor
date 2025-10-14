@@ -26,9 +26,25 @@ let performanceStats = {
 // 拖拽功能
 function initDragAndDrop() {
     const container = document.querySelector('.container');
+    if (!container) {
+        console.warn('容器元素未找到，跳过拖拽初始化');
+        return;
+    }
+    
     const panels = document.querySelectorAll('.controls, .chart-container, .statistics-panel, .thread-distribution');
+    if (!panels || panels.length === 0) {
+        console.warn('面板元素未找到，跳过拖拽初始化');
+        return;
+    }
     
     panels.forEach(panel => {
+        // 🔒 关键修改1：禁止统计面板被拖拽，保证它固定在图表上方
+        if (panel.id === 'statisticsPanel') {
+            panel.setAttribute('draggable', 'false');
+            panel.style.cursor = 'default';
+            return; // 跳过统计面板，不添加拖拽事件
+        }
+        
         panel.addEventListener('dragstart', handleDragStart);
         panel.addEventListener('dragend', handleDragEnd);
     });
@@ -82,8 +98,17 @@ function getDragAfterElement(container, y) {
 
 function savePanelOrder() {
     const panels = document.querySelectorAll('.controls, .chart-container, .statistics-panel, .thread-distribution');
-    const order = Array.from(panels).map(panel => panel.id);
+    const order = [];
+    
+    panels.forEach(panel => {
+        // 🔒 关键修改2：排除统计面板，不保存它的位置
+        if (panel.id && panel.id !== 'statisticsPanel') {
+            order.push(panel.id);
+        }
+    });
+    
     localStorage.setItem('androidPanelOrder', JSON.stringify(order));
+    console.log('已保存面板顺序（排除统计面板）:', order);
 }
 
 function restorePanelOrder() {
@@ -94,19 +119,28 @@ function restorePanelOrder() {
         const order = JSON.parse(savedOrder);
         const container = document.querySelector('.container');
         
+        if (!container) {
+            console.warn('容器元素未找到，无法恢复面板顺序');
+            return;
+        }
+        
+        // 找到所有面板（排除统计面板）
         const panels = {};
         document.querySelectorAll('.controls, .chart-container, .statistics-panel, .thread-distribution').forEach(panel => {
-            if (panel.id) {
+            if (panel.id && panel.id !== 'statisticsPanel') {
+                // 🔒 关键修改3：排除统计面板，保证它不被移动
                 panels[panel.id] = panel;
             }
         });
         
-        // 重新排序
+        // 按保存的顺序重新排列（不包括统计面板）
         order.forEach(id => {
             if (panels[id]) {
                 container.appendChild(panels[id]);
             }
         });
+        
+        console.log('已恢复面板顺序（统计面板保持固定位置）');
     } catch (error) {
         console.log('恢复面板顺序失败:', error);
     }
@@ -378,6 +412,19 @@ function refreshDevices() {
     socket.emit('get_devices');
 }
 
+// 设备选择变更时自动获取应用列表
+function onDeviceChanged() {
+    const deviceId = document.getElementById('deviceSelect').value;
+    if (deviceId) {
+        // 自动获取应用列表
+        refreshApps();
+    } else {
+        // 清空应用列表
+        const packageSelect = document.getElementById('packageSelect');
+        packageSelect.innerHTML = '<option value="">请先选择设备</option>';
+    }
+}
+
 // 刷新应用列表
 function refreshApps() {
     const deviceId = document.getElementById('deviceSelect').value;
@@ -515,13 +562,14 @@ socket.on('apps_list', function(data) {
         return;
     }
     
-    // 确保apps是数组
+    // 确保 apps是数组
     const apps = data.apps || [];
     
     apps.forEach(app => {
         const option = document.createElement('option');
         option.value = app.package_name;
-        option.textContent = app.display_name;
+        // 🔒 显示格式：应用名称(包名)
+        option.textContent = `${app.app_name} (${app.package_name})`;
         packageSelect.appendChild(option);
     });
     
@@ -883,10 +931,34 @@ function getStateText(state) {
 
 // 页面加载完成后初始化
 document.addEventListener('DOMContentLoaded', function() {
-    initCharts();
-    initDragAndDrop();
-    restorePanelOrder();
+    console.log('Android性能监控可视化界面已加载');
+    
+    setTimeout(() => {
+        initCharts();
+        initDragAndDrop();
+        ensureStatisticsPanelPosition(); // 🔒 关键修改4：确保统计面板位置
+        restorePanelOrder();
+    }, 100);
     
     // 自动刷新设备列表
     refreshDevices();
 });
+
+// 🔒 确保统计面板在所有图表容器上方
+function ensureStatisticsPanelPosition() {
+    const container = document.querySelector('.container');
+    const statisticsPanel = document.getElementById('statisticsPanel');
+    const firstChartContainer = document.getElementById('cpuChart-container');
+    
+    if (container && statisticsPanel && firstChartContainer) {
+        // 将统计面板移动到第一个图表容器之前
+        container.insertBefore(statisticsPanel, firstChartContainer);
+        console.log('✅ 统计面板已放置在图表上方');
+    } else {
+        console.warn('⚠️ 统计面板位置调整失败：', {
+            container: !!container,
+            statisticsPanel: !!statisticsPanel,
+            firstChartContainer: !!firstChartContainer
+        });
+    }
+}

@@ -1,75 +1,134 @@
-# 📱 iOS性能监控Web可视化
+# 📱 跨平台性能监控工具
 
-基于原始`main.py`逻辑的实时性能监控可视化界面，保持完全相同的核心逻辑，增加了Web图表显示功能。
+一个支持iOS和Android设备的实时性能监控可视化工具，提供Web界面显示CPU、内存、FPS、线程数等关键指标。
 
-## ✨ 功能特性
+## ✨ 核心特性
 
-- 🔄 **实时监控**: 基于原始main.py的完整逻辑
-- 📊 **可视化图表**: CPU、内存、FPS、线程数的实时曲线图
-- 🌐 **Web界面**: 美观的响应式Web界面
-- 📱 **iOS设备支持**: 支持iOS 17+设备性能监控
-- 🎯 **应用特定监控**: 可指定Bundle ID监控特定应用
-
-## 📦 项目结构
-
-```
-ios性能/
-├── main.py                 # 原始性能监控脚本（未修改）
-├── web_visualizer.py       # Web可视化服务器（基于main.py逻辑）
-├── start_web_monitor.py    # 启动脚本
-├── templates/
-│   └── index.html         # Web可视化界面
-├── venv/                  # Python虚拟环境
-├── requirements.txt       # 依赖包列表
-└── README.md             # 说明文档
-```
+- 🔄 **实时监控**: 每秒采集性能数据，实时更新图表
+- 📊 **可视化图表**: 基于Chart.js的动态曲线图显示
+- 🌐 **Web界面**: 美观的响应式Web界面，支持拖拽排序
+- 📱 **跨平台支持**: 同时支持iOS 15+和Android设备监控
+- 🎯 **应用特定监控**: 可指定Bundle ID或包名监控特定应用
+- 🔧 **线程详情**: Android支持线程状态和分类统计
+- 💾 **数据统计**: 显示当前值、平均值、最大值统计
+- 🎨 **智能交互**: 
+  - 设备选择后自动加载应用列表
+  - 应用列表显示真实名称（如：微信 (com.tencent.mm)）
+  - 统计面板固定位置，关键指标集中展示
 
 ## 🚀 快速开始
 
-### 1. 启动Web监控界面
+### 环境准备
 
 ```bash
+# 1. 克隆项目
+git clone <repository-url>
+cd ios性能
+
+# 2. 创建虚拟环境
+python3 -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. 安装依赖
+pip install -r requirements.txt
+```
+
+### iOS设备监控
+
+**系统要求**:
+- macOS (推荐) / Linux
+- Python 3.13+
+- 管理员权限
+- iOS 15+ 设备已连接并信任电脑
+
+**启动方法**:
+```bash
 # 方法1: 使用启动脚本（推荐）
-python start_web_monitor.py
+python start_ios_monitor.py
 
 # 方法2: 手动启动
-source venv/bin/activate
+cd ios
 python web_visualizer.py
 ```
 
-### 2. 访问Web界面
+访问地址：**http://localhost:5002**
 
-启动后自动打开浏览器访问: http://localhost:5000
+### Android设备监控
 
-### 3. 配置监控参数
+**系统要求**:
+- Python 3.8+
+- Android SDK Platform Tools (ADB)
+- Android设备已开启USB调试
 
-在Web界面中设置:
-- **设备UDID**: 留空使用默认连接的设备
-- **Bundle ID**: 指定要监控的应用包名，留空监控所有进程
+**安装ADB**:
+```bash
+# macOS
+brew install android-platform-tools
 
-### 4. 开始监控
+# Ubuntu/Debian
+sudo apt install android-tools-adb
+```
 
-点击"开始监控"按钮，即可看到实时的性能曲线图
+**启动方法**:
+```bash
+# 方法1: 使用启动脚本（推荐）
+python start_android_monitor.py
 
-## 📊 监控指标
+# 方法2: 手动启动
+cd android
+python android_web_visualizer.py
+```
 
-### CPU使用率
-- 实时显示应用CPU占用百分比
-- 红色曲线图，范围0-100%
+访问地址：**http://localhost:5003**
 
-### 内存使用量
-- 显示应用物理内存占用
-- 蓝色曲线图，单位MB
+## 📁 项目结构
 
-### 帧率(FPS)
-- 显示应用渲染帧率
-- 绿色曲线图，范围0-60FPS
+```
+跨平台性能监控工具/
+├── ios/                          # iOS监控模块
+│   ├── main.py                   # 原始性能监控脚本（未修改）
+│   ├── web_visualizer.py          # iOS Web可视化服务器
+│   └── start_web_monitor.py       # iOS子目录启动脚本
+├── android/                       # Android监控模块
+│   ├── android_main.py            # Android命令行监控脚本
+│   ├── android_web_visualizer.py  # Android Web可视化服务器
+│   └── start_android_monitor.py   # Android子目录启动脚本
+├── templates/                     # Web界面模板
+│   ├── index.html                 # iOS可视化界面
+│   └── android_index.html         # Android可视化界面
+├── static/                       # 静态资源文件
+│   └── android_script.js          # Android前端脚本
+├── tools/                        # 工具脚本
+│   ├── check_tools.sh             # 环境检测工具
+│   └── install_ios_tools.sh       # iOS工具链安装
+├── docs/                         # 文档目录
+│   └── README_Android.md          # Android平台专用文档
+├── start_ios_monitor.py          # iOS主启动脚本
+├── start_android_monitor.py      # Android主启动脚本
+├── requirements.txt              # Python依赖列表
+├── README.md                     # 主说明文档
+└── CHANGELOG.md                  # 更新记录
+```
 
-### 线程数量
-- 显示应用当前线程数
-- 橙色曲线图
+## 📊 监控指标对比
+
+| 指标类型 | iOS | Android | 说明 |
+|---------|-----|---------|------|
+| CPU使用率 | ✅ | ✅ | 应用CPU占用百分比 |
+| 内存使用量 | ✅ | ✅ | 物理内存占用(MB) |
+| 帧率(FPS) | ✅ | ✅ | 应用渲染帧率 |
+| 线程数 | ✅(总数) | ✅(详情) | iOS显示总数，Android支持状态分析 |
+| 磁盘I/O | ✅ | ✅ | 读写速度监控 |
+| 数据统计 | ✅ | ✅ | 当前值/平均值/最大值 |
+| 拖拽排序 | ✅ | ✅ | 面板可拖拽重新排列 |
 
 ## 🔧 技术实现
+
+### 跨平台架构
+- **统一Web框架**: Flask + Socket.IO + Chart.js
+- **相同界面设计**: 一致的用户体验和交互方式
+- **相同端口规划**: iOS(5002) / Android(5003)
+- **模块化设计**: 平台特定逻辑分离，共享Web资源
 
 ### 核心逻辑保持一致
 - `TunnelManager`: 完全复制原始tunnel管理逻辑
@@ -104,11 +163,25 @@ python web_visualizer.py
 
 ## 💡 使用技巧
 
-1. **设备连接**: 确保iOS设备通过USB连接并信任电脑
-2. **权限要求**: 需要管理员权限访问iOS设备
-3. **应用监控**: 输入Bundle ID可监控特定应用性能
-4. **数据保留**: 图表最多保留50个数据点，自动滚动显示
-5. **实时性**: 数据每秒更新，与原始main.py保持一致
+### 通用技巧
+1. **面板拖拽**: 点击面板标题左侧的 ⋮⋮ 图标可拖拽调整显示顺序
+2. **数据保留**: 图表最多保留50个数据点，自动滚动显示
+3. **实时性**: 数据每秒更新，保持一致的监控频率
+4. **数据统计**: 查看当前值、平均值、最大值等统计信息
+5. **智能交互**: 
+   - 选择设备后自动加载应用列表，无需手动刷新
+   - 应用列表显示真实名称，方便快速识别
+
+### iOS特定
+- 确保设备通过USB连接并信任电脑
+- 需要管理员权限访问iOS设备
+- 支持iOS 15+系统（iOS 17+推荐）
+
+### Android特定  
+- 开启开发者选项和USB调试
+- 安装ADB工具并确保设备授权
+- 支持线程详情分析和智能分类
+- 应用名称自动识别，显示格式：`应用名称 (包名)`
 
 ## 🔍 故障排除
 

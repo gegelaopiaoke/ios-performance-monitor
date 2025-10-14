@@ -1,5 +1,179 @@
 # 📋 更新记录 (CHANGELOG)
 
+## [2025.10.14] - Android应用名称显示优化 + 界面交互提升
+
+### 🎨 用户体验优化 (UX Improvements)
+
+#### 🤖 Android平台改进
+- **新增**: 应用列表自动显示应用真实名称
+  - 使用 `dumpsys package` 命令获取真实应用名称
+  - 显示格式优化为：`应用名称 (包名)`
+  - 例如：`微信 (com.tencent.mm)` 替代原来的 `com.tencent.mm`
+- **优化**: 设备选择后自动获取应用列表
+  - 无需手动点击「刷新应用」按钮
+  - 选择设备即可自动加载应用列表
+  - 提升操作流畅度和用户体验
+
+#### 🎯 界面一致性保障
+- **优化**: Android统计面板位置锁定
+  - 实现与iOS版本相同的四重防护机制
+  - 确保数据统计面板固定在CPU图表上方
+  - 禁止拖拽、排除保存/恢复逻辑、强制位置校正
+- **统一**: 移除Android统计面板拖拽手柄
+  - 删除 `⋮⋮` 拖拽图标，保持与iOS版本一致
+  - 统计面板作为关键信息区域永久固定
+
+### 🔧 技术实现 (Technical Details)
+
+#### 📱 应用名称获取策略
+```python
+# 主要方案：dumpsys package 获取 applicationLabel
+def get_app_name(package_name):
+    cmd = ['adb', 'shell', 'dumpsys', 'package', package_name]
+    # 解析 applicationLabel 字段
+    # 备用方案：从包名最后一段提取并首字母大写
+```
+
+#### 🎨 前端交互优化
+```javascript
+// 设备选择自动触发应用获取
+function onDeviceChanged() {
+    if (deviceId) {
+        refreshApps(); // 自动调用
+    }
+}
+
+// 应用列表显示格式
+option.textContent = `${app.app_name} (${app.package_name})`;
+```
+
+#### 🔒 统计面板四重防护
+1. **禁止拖拽**: `draggable="false"`, `cursor: default`
+2. **保存排除**: 保存面板顺序时排除统计面板
+3. **恢复排除**: 恢复面板顺序时排除统计面板
+4. **位置校正**: 关键时刻强制使用 `insertBefore()` 校正位置
+
+### 📊 数据结构优化 (Data Structure)
+
+#### 前后端数据对齐
+```json
+{
+  "apps": [
+    {
+      "package_name": "com.tencent.mm",
+      "app_name": "微信",
+      "display_name": "微信 (com.tencent.mm)"
+    }
+  ]
+}
+```
+
+### 📝 文件修改统计 (File Changes)
+
+```
+修改文件：
+- android/android_web_visualizer.py    (+60行)  应用名称获取方法
+- templates/android_index.html         (~10行)  设备选择事件绑定
+- static/android_script.js             (+40行)  自动获取应用 + 位置锁定
+
+核心改进：
+- 新增 get_app_name() 方法
+- 优化 handle_get_apps() 返回数据
+- 实现 onDeviceChanged() 自动触发
+- 强化 statisticsPanel 位置锁定
+```
+
+### ✅ 问题修复 (Bug Fixes)
+
+- **修复**: 应用列表显示 `undefined (包名)` 问题
+  - 原因：前端使用 `app_name` 字段，后端只返回 `display_name`
+  - 解决：后端添加 `get_app_name()` 方法，确保返回 `app_name` 字段
+- **修复**: 统计面板位置不稳定问题
+  - 原因：拖拽功能与位置锁定冲突
+  - 解决：实现四重防护机制，确保面板永久固定
+
+### 🎯 跨平台一致性 (Cross-Platform Consistency)
+
+| 功能特性 | iOS | Android | 状态 |
+|---------|-----|---------|------|
+| 统计面板固定位置 | ✅ | ✅ | 已同步 |
+| 统计面板禁止拖拽 | ✅ | ✅ | 已同步 |
+| 应用名称显示 | ✅ | ✅ | 已优化 |
+| 自动获取应用列表 | ✅ | ✅ | 已实现 |
+
+---
+
+## [2025.10.14] - 项目结构整理与代码清理
+
+### 🧯 项目重构 (Project Restructuring)
+
+#### 📁 目录结构优化
+- **新增**: `ios/` 目录 - iOS监控相关文件集中管理
+- **新增**: `android/` 目录 - Android监控相关文件集中管理  
+- **新增**: `tools/` 目录 - 工具脚本集中存放
+- **新增**: `docs/` 目录 - 文档文件集中管理
+- **移动**: iOS相关文件移至 `ios/` 子目录
+- **移动**: Android相关文件移至 `android/` 子目录
+- **移动**: 工具脚本移至 `tools/` 子目录
+
+#### 🗑️ 代码清理 (Code Cleanup)
+- **删除**: 15个多余文件，包括：
+  - 重复的iOS监控脚本: `ios_device_monitor.py`, `ios_real_monitor.py`, `ios_real_monitor_fixed.py`, `ios_simple_monitor.py`
+  - 调试文件: `debug.py`, `debug_dvt_output.py`, `fixed_process_parser.py`
+  - 备份模板文件: `index2.html`, `index_backup.html`, `index_working.html`
+  - 测试文件: `test_device_connection.py`, `线程分析.py`
+  - 历史数据文件: CSV/JSON数据文件
+  - 重复启动脚本: `start_auto_password.py`
+
+#### 🚀 启动脚本优化
+- **新增**: `start_ios_monitor.py` - 项目根目录iOS启动脚本
+- **新增**: `start_android_monitor.py` - 项目根目录Android启动脚本
+- **修复**: 模板文件路径引用问题，支持子目录结构
+- **优化**: 启动流程和错误提示
+
+### 📄 文档更新 (Documentation Updates)
+
+#### 📝 README.md 大幅改进
+- **重新设计**: 从"iOS性能监控"升级为"跨平台性能监控工具"
+- **新增**: 详细的跨平台功能对比表
+- **新增**: 分平台的安装和启动指南
+- **新增**: 新的项目结构展示
+- **优化**: 更清晰的功能介绍和使用说明
+
+### 🔧 技术改进 (Technical Improvements)
+
+#### 🌐 路径管理优化
+- **修复**: Flask应用模板文件夹配置，支持新目录结构
+- **优化**: 启动脚本中的相对路径处理
+- **增强**: PYTHONPATH环境变量设置，确保模块导入正常
+
+### 📊 数据统计 (Statistics)
+
+```
+文件变更统计：
+- 删除文件：15个
+- 新增文件：2个 (新启动脚本)
+- 修改文件：4个 (README.md, CHANGELOG.md, 两个web_visualizer.py)
+- 目录结构：4个新目录 (ios/, android/, tools/, docs/)
+- 代码减少：约-15,000行 (删除重复代码)
+```
+
+### 🎯 整理效果 (Cleanup Results)
+
+#### ✅ 优化成果
+- **目录结构更清晰**: 按功能模块分类组织
+- **代码更精简**: 删除所有重复和调试文件
+- **文档更全面**: 支持跨平台的完整说明
+- **启动更简单**: 统一的启动入口和清晰的指引
+- **维护更容易**: 清晰的模块分离和责任分工
+
+#### ⚠️ 注意事项
+- 原有的单独启动脚本可能需要路径调整
+- 虚拟环境位置保持不变，无需重新安装依赖
+- 所有核心功能和配置保持不变
+
+---
+
 ## [2025.10.14] - 大版本更新：跨平台监控支持 + 端口规范化
 
 ### 🎉 新增功能 (New Features)

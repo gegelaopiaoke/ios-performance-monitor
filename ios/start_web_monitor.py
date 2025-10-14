@@ -12,8 +12,9 @@ import time
 def main():
     print("🚀 启动iOS性能监控Web可视化界面...")
     
-    # 检查虚拟环境
-    venv_path = os.path.join(os.path.dirname(__file__), 'venv')
+    # 检查虚拟环境（在上级目录）
+    project_root = os.path.dirname(os.path.dirname(__file__))
+    venv_path = os.path.join(project_root, 'venv')
     if not os.path.exists(venv_path):
         print("❌ 未找到虚拟环境，请先运行以下命令创建虚拟环境:")
         print("python3.13 -m venv venv")
@@ -31,6 +32,8 @@ def main():
         activate_script = os.path.join(venv_path, 'bin', 'activate')
         # 直接使用虚拟环境的python，不需要sudo
         python_path = os.path.join(venv_path, 'bin', 'python')
+        # 设置PYTHONPATH环境变量，确保能找到模板目录
+        os.environ['PYTHONPATH'] = project_root
         cmd = f'"{python_path}" "{web_visualizer_path}"'
     
     print("📱 正在启动Web服务器...")
