@@ -34,7 +34,7 @@ def main():
         cmd = f'"{python_path}" "{web_visualizer_path}"'
     
     print("📱 正在启动Web服务器...")
-    print("💡 提示: 启动后会自动打开浏览器访问 http://localhost:5001")
+    print("💡 提示: 启动后会自动打开浏览器访问 http://localhost:5002")
     print("🔧 请确保iOS设备已连接并信任此电脑")
     print()
     
@@ -42,10 +42,10 @@ def main():
     def open_browser():
         time.sleep(3)  # 等待服务器启动
         try:
-            webbrowser.open('http://localhost:5001')
+            webbrowser.open('http://localhost:5002')
             print("🌐 已自动打开浏览器")
         except:
-            print("🌐 请手动打开浏览器访问: http://localhost:5001")
+            print("🌐 请手动打开浏览器访问: http://localhost:5002")
     
     # 在后台线程中打开浏览器
     import threading

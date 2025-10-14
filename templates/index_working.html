@@ -383,35 +383,30 @@
         }
         
         /* 拖拽功能样式 */
-        .controls,
-        .chart-container {
+        .controls {
             position: relative;
             cursor: move;
             transition: transform 0.2s ease;
         }
         
-        .controls:hover,
-        .chart-container:hover {
+        .controls:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         }
         
-        .controls.dragging,
-        .chart-container.dragging {
+        .controls.dragging {
             opacity: 0.7;
             transform: rotate(2deg);
             z-index: 1000;
             box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
         }
         
-        .controls h3,
-        .chart-container h3 {
+        .controls h3 {
             user-select: none;
             position: relative;
         }
         
-        .controls h3::before,
-        .chart-container h3::before {
+        .controls h3::before {
             content: '⋮⋮';
             position: absolute;
             left: -20px;
@@ -422,8 +417,7 @@
             line-height: 1;
         }
         
-        .controls:hover h3::before,
-        .chart-container:hover h3::before {
+        .controls:hover h3::before {
             color: #666;
         }
         
@@ -730,14 +724,6 @@
                 <div class="label">线程数</div>
                 <div class="value" id="currentThreads">0</div>
             </div>
-            <div class="value-card">
-                <div class="label">磁盘读取</div>
-                <div class="value" id="currentDiskReads">0MB</div>
-            </div>
-            <div class="value-card">
-                <div class="label">磁盘写入</div>
-                <div class="value" id="currentDiskWrites">0MB</div>
-            </div>
         </div>
 
         <div class="charts-grid" id="chartsGrid" style="display: none;">
@@ -767,20 +753,6 @@
                 <div class="chart-wrapper" data-chart="threads">
                     <canvas id="threadsChart"></canvas>
                     <div class="chart-selection-overlay" id="threadsOverlay"></div>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h3>📅 磁盘读取</h3>
-                <div class="chart-wrapper" data-chart="disk_reads">
-                    <canvas id="diskReadsChart"></canvas>
-                    <div class="chart-selection-overlay" id="diskReadsOverlay"></div>
-                </div>
-            </div>
-            <div class="chart-container">
-                <h3>📄 磁盘写入</h3>
-                <div class="chart-wrapper" data-chart="disk_writes">
-                    <canvas id="diskWritesChart"></canvas>
-                    <div class="chart-selection-overlay" id="diskWritesOverlay"></div>
                 </div>
             </div>
         </div>
@@ -865,7 +837,7 @@
         <!-- 数据统计面板 -->
         <div class="controls" id="statisticsPanel">
             <h3>📈 数据统计</h3>
-            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px;">
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
                 <div class="stat-card">
                     <div class="stat-label">CPU使用率</div>
                     <div class="stat-current" id="statCpuCurrent">0%</div>
@@ -896,22 +868,6 @@
                     <div class="stat-details">
                         平均: <span id="statThreadsAvg">0</span> | 
                         最大: <span id="statThreadsMax">0</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">磁盘读取</div>
-                    <div class="stat-current" id="statDiskReadsCurrent">0MB</div>
-                    <div class="stat-details">
-                        平均: <span id="statDiskReadsAvg">0MB</span> | 
-                        最大: <span id="statDiskReadsMax">0MB</span>
-                    </div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">磁盘写入</div>
-                    <div class="stat-current" id="statDiskWritesCurrent">0MB</div>
-                    <div class="stat-details">
-                        平均: <span id="statDiskWritesAvg">0MB</span> | 
-                        最大: <span id="statDiskWritesMax">0MB</span>
                     </div>
                 </div>
             </div>
@@ -961,7 +917,7 @@
         });
         
         // 图表实例
-        let cpuChart, memoryChart, fpsChart, threadsChart, diskReadsChart, diskWritesChart;
+        let cpuChart, memoryChart, fpsChart, threadsChart;
         
         // 数据存储
         let isMonitoring = false;
@@ -987,9 +943,7 @@
             cpu: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
             memory: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
             fps: { current: 0, avg: 0, min: Infinity, sum: 0, count: 0 },
-            threads: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
-            disk_reads: { current: 0, avg: 0, max: 0, sum: 0, count: 0 },
-            disk_writes: { current: 0, avg: 0, max: 0, sum: 0, count: 0 }
+            threads: { current: 0, avg: 0, max: 0, sum: 0, count: 0 }
         };
         
         // 专业级内存泄漏检测系统
@@ -1086,8 +1040,6 @@
         let allMemoryData = []; // 存储所有内存数据
         let allFpsData = []; // 存储所有FPS数据
         let allThreadsData = []; // 存储所有线程数据
-        let allDiskReadsData = []; // 存储所有磁盘读取数据
-        let allDiskWritesData = []; // 存储所有磁盘写入数据
         let currentUpdateInterval = 1000; // 当前更新间隔
         let isFollowingLatest = true; // 是否跟随最新数据
         
@@ -1249,62 +1201,6 @@
                     }
                 }
             });
-
-            const diskReadsCtx = document.getElementById('diskReadsChart').getContext('2d');
-            diskReadsChart = new Chart(diskReadsCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '磁盘读取 (MB)',
-                        data: [],
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    ...chartOptions,
-                    scales: {
-                        ...chartOptions.scales,
-                        y: {
-                            ...chartOptions.scales.y,
-                            title: {
-                                display: true,
-                                text: '磁盘读取 (MB)'
-                            }
-                        }
-                    }
-                }
-            });
-
-            const diskWritesCtx = document.getElementById('diskWritesChart').getContext('2d');
-            diskWritesChart = new Chart(diskWritesCtx, {
-                type: 'line',
-                data: {
-                    labels: [],
-                    datasets: [{
-                        label: '磁盘写入 (MB)',
-                        data: [],
-                        borderColor: '#ec4899',
-                        backgroundColor: 'rgba(236, 72, 153, 0.1)',
-                        fill: true
-                    }]
-                },
-                options: {
-                    ...chartOptions,
-                    scales: {
-                        ...chartOptions.scales,
-                        y: {
-                            ...chartOptions.scales.y,
-                            title: {
-                                display: true,
-                                text: '磁盘写入 (MB)'
-                            }
-                        }
-                    }
-                }
-            });
         }
 
         // 添加数据到图表
@@ -1319,10 +1215,6 @@
                 allFpsData.push(data);
             } else if (chart === threadsChart) {
                 allThreadsData.push(data);
-            } else if (chart === diskReadsChart) {
-                allDiskReadsData.push(data);
-            } else if (chart === diskWritesChart) {
-                allDiskWritesData.push(data);
             }
             
             // 如果正在跟随最新数据，立即更新显示（无延迟）
@@ -1403,8 +1295,6 @@
             updateChartData(memoryChart, allTimeLabels.slice(startIndex, endIndex), allMemoryData.slice(startIndex, endIndex));
             updateChartData(fpsChart, allTimeLabels.slice(startIndex, endIndex), allFpsData.slice(startIndex, endIndex));
             updateChartData(threadsChart, allTimeLabels.slice(startIndex, endIndex), allThreadsData.slice(startIndex, endIndex));
-            updateChartData(diskReadsChart, allTimeLabels.slice(startIndex, endIndex), allDiskReadsData.slice(startIndex, endIndex));
-            updateChartData(diskWritesChart, allTimeLabels.slice(startIndex, endIndex), allDiskWritesData.slice(startIndex, endIndex));
 
             // 更新拖动条的范围
             if (allTimeLabels.length > windowSize) {
@@ -2428,27 +2318,11 @@
             document.getElementById('currentThreads').textContent = data.threads;
             document.getElementById('currentFps').textContent = `${data.fps}FPS`;
             
-            // 更新磁盘读写当前值显示
-            if (data.disk_reads !== undefined && typeof data.disk_reads === 'number') {
-                document.getElementById('currentDiskReads').textContent = `${data.disk_reads.toFixed(1)}MB`;
-            }
-            if (data.disk_writes !== undefined && typeof data.disk_writes === 'number') {
-                document.getElementById('currentDiskWrites').textContent = `${data.disk_writes.toFixed(1)}MB`;
-            }
-            
             // 立即添加数据到图表（同步，无延迟）
             addDataToChart(cpuChart, data.time, data.cpu);
             addDataToChart(memoryChart, data.time, data.memory);
             addDataToChart(threadsChart, data.time, data.threads);
             addDataToChart(fpsChart, data.time, data.fps);
-            
-            // 添加磁盘读写数据到图表
-            if (data.disk_reads !== undefined && typeof data.disk_reads === 'number') {
-                addDataToChart(diskReadsChart, data.time, data.disk_reads);
-            }
-            if (data.disk_writes !== undefined && typeof data.disk_writes === 'number') {
-                addDataToChart(diskWritesChart, data.time, data.disk_writes);
-            }
             
             // 保存到allPerformanceData用于导出
             allPerformanceData.push({
@@ -2459,8 +2333,6 @@
                 memory: data.memory,
                 fps: data.fps,
                 threads: data.threads,
-                disk_reads: data.disk_reads || 0,
-                disk_writes: data.disk_writes || 0,
                 pid: data.pid,
                 name: data.name
             });
@@ -2469,9 +2341,7 @@
             if (!window.statsUpdatePending) {
                 window.statsUpdatePending = true;
                 setTimeout(() => {
-                    const diskReads = (typeof data.disk_reads === 'number') ? data.disk_reads : 0;
-                    const diskWrites = (typeof data.disk_writes === 'number') ? data.disk_writes : 0;
-                    updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads, diskReads, diskWrites);
+                    updatePerformanceStats(data.cpu, data.memory, data.fps || 0, data.threads);
                     checkPerformanceThresholds(data.cpu, data.memory, data.fps || 0, data.threads);
                     detectMemoryLeak(data.memory, data.cpu, data.fps || 0, data.threads);
                     updatePerformanceScores();
@@ -2510,7 +2380,7 @@
         });
 
         // 性能统计更新函数
-        function updatePerformanceStats(cpu, memory, fps, threads, diskReads, diskWrites) {
+        function updatePerformanceStats(cpu, memory, fps, threads) {
             // 更新CPU统计
             performanceStats.cpu.current = cpu;
             performanceStats.cpu.sum += cpu;
@@ -2541,24 +2411,6 @@
             performanceStats.threads.avg = performanceStats.threads.sum / performanceStats.threads.count;
             performanceStats.threads.max = Math.max(performanceStats.threads.max, threads);
             
-            // 更新磁盘读取统计
-            if (diskReads !== undefined) {
-                performanceStats.disk_reads.current = diskReads;
-                performanceStats.disk_reads.sum += diskReads;
-                performanceStats.disk_reads.count++;
-                performanceStats.disk_reads.avg = performanceStats.disk_reads.sum / performanceStats.disk_reads.count;
-                performanceStats.disk_reads.max = Math.max(performanceStats.disk_reads.max, diskReads);
-            }
-            
-            // 更新磁盘写入统计
-            if (diskWrites !== undefined) {
-                performanceStats.disk_writes.current = diskWrites;
-                performanceStats.disk_writes.sum += diskWrites;
-                performanceStats.disk_writes.count++;
-                performanceStats.disk_writes.avg = performanceStats.disk_writes.sum / performanceStats.disk_writes.count;
-                performanceStats.disk_writes.max = Math.max(performanceStats.disk_writes.max, diskWrites);
-            }
-            
             // 更新统计面板显示
             updateStatisticsDisplay();
         }
@@ -2581,20 +2433,6 @@
             document.getElementById('statThreadsCurrent').textContent = performanceStats.threads.current;
             document.getElementById('statThreadsAvg').textContent = performanceStats.threads.avg.toFixed(1);
             document.getElementById('statThreadsMax').textContent = performanceStats.threads.max;
-            
-            // 更新磁盘读取统计显示
-            if (performanceStats.disk_reads.count > 0) {
-                document.getElementById('statDiskReadsCurrent').textContent = `${performanceStats.disk_reads.current.toFixed(1)}MB`;
-                document.getElementById('statDiskReadsAvg').textContent = `${performanceStats.disk_reads.avg.toFixed(1)}MB`;
-                document.getElementById('statDiskReadsMax').textContent = `${performanceStats.disk_reads.max.toFixed(1)}MB`;
-            }
-            
-            // 更新磁盘写入统计显示
-            if (performanceStats.disk_writes.count > 0) {
-                document.getElementById('statDiskWritesCurrent').textContent = `${performanceStats.disk_writes.current.toFixed(1)}MB`;
-                document.getElementById('statDiskWritesAvg').textContent = `${performanceStats.disk_writes.avg.toFixed(1)}MB`;
-                document.getElementById('statDiskWritesMax').textContent = `${performanceStats.disk_writes.max.toFixed(1)}MB`;
-            }
         }
         
         // 性能阈值检查函数
@@ -2812,7 +2650,7 @@
 
         function initDragAndDrop() {
             const container = document.querySelector('.container');
-            const panels = document.querySelectorAll('.controls, .chart-container');
+            const panels = document.querySelectorAll('.controls');
             
             panels.forEach(panel => {
                 panel.setAttribute('draggable', 'true');
@@ -2880,7 +2718,7 @@
         }
 
         function getDragAfterElement(container, y) {
-            const draggableElements = [...container.querySelectorAll('.controls:not(.dragging), .chart-container:not(.dragging)')];
+            const draggableElements = [...container.querySelectorAll('.controls:not(.dragging)')];
             
             return draggableElements.reduce((closest, child) => {
                 const box = child.getBoundingClientRect();
@@ -2895,7 +2733,7 @@
         }
 
         function savePanelOrder() {
-            const panels = document.querySelectorAll('.controls, .chart-container');
+            const panels = document.querySelectorAll('.controls');
             const order = [];
             
             panels.forEach(panel => {
@@ -2917,7 +2755,7 @@
                 
                 // 找到所有面板
                 const panels = {};
-                document.querySelectorAll('.controls, .chart-container').forEach(panel => {
+                document.querySelectorAll('.controls').forEach(panel => {
                     if (panel.id) {
                         panels[panel.id] = panel;
                     }

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Android性能监控可视化</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f7;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #1d1d1f;
+            margin-bottom: 10px;
+        }
+        .controls, .chart-container {
+            position: relative;
+            cursor: move;
+            transition: transform 0.2s ease;
+        }
+        
+        .controls h3::before, .chart-container h3::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+        }
+        
+        .controls.dragging, .chart-container.dragging {
+            transform: rotate(5deg);
+            opacity: 0.8;
+            z-index: 1000;
+        }
+        .controls {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .controls h3 {
+            margin-top: 0;
+            color: #1d1d1f;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #424245;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .form-group input:focus, .form-group select:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        .btn {
+            background: #007aff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            margin-right: 10px;
+        }
+        .btn:hover {
+            background: #0056cc;
+        }
+        .btn:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+        }
+        .btn.stop {
+            background: #ff3b30;
+        }
+        .btn.stop:hover {
+            background: #d32f2f;
+        }
+        .current-values {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .value-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        .value-card .label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .value-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .chart-container h3 {
+            margin: 0 0 20px 0;
+            color: #1d1d1f;
+            font-size: 18px;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+        }
+        .statistics-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 15px;
+        }
+        .stat-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .stat-label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .stat-current {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 5px;
+        }
+        .stat-details {
+            font-size: 11px;
+            color: #86868b;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        .hidden {
+            display: none;
+        }
+        .thread-distribution {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+            position: relative;
+            cursor: move;
+            transition: transform 0.2s ease;
+        }
+        .thread-distribution h3::before {
+            content: '⋮⋮';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ccc;
+        }
+        .thread-distribution.dragging {
+            transform: rotate(5deg);
+            opacity: 0.8;
+            z-index: 1000;
+        }
+        .thread-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e5e7;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .thread-header {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 80px;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #f0f0f0;
+            border-bottom: 1px solid #e5e5e7;
+            font-weight: 600;
+            font-size: 12px;
+            color: #424245;
+        }
+        .thread-item {
+            display: grid;
+            grid-template-columns: 80px 1fr 120px 80px;
+            gap: 10px;
+            padding: 8px 15px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 11px;
+            color: #1d1d1f;
+        }
+        .thread-item:hover {
+            background: #f8f9fa;
+        }
+        .thread-item:last-child {
+            border-bottom: none;
+        }
+        .thread-tid {
+            font-family: monospace;
+            font-weight: 600;
+            color: #007aff;
+        }
+        .thread-name {
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .thread-state {
+            text-align: center;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+        .thread-state.S {
+            background: #d4edda;
+            color: #155724;
+        }
+        .thread-state.R {
+            background: #f8d7da;
+            color: #721c24;
+            animation: pulse 1.5s infinite;
+        }
+        .thread-state.D {
+            background: #fff3cd;
+            color: #856404;
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        .thread-summary {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .thread-summary-card {
+            text-align: center;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+        .thread-summary-label {
+            font-size: 12px;
+            color: #86868b;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        .thread-summary-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Android性能监控可视化</h1>
+            <p>实时监控Android应用的CPU、内存、FPS、线程数等性能指标</p>
+        </div>
+
+        <div id="status" class="status hidden"></div>
+
+        <div class="controls" id="controls" draggable="true">
+            <h3>📱 设备与应用控制</h3>
+            <div class="form-group">
+                <label for="deviceSelect">选择Android设备:</label>
+                <select id="deviceSelect">
+                    <option value="">请先刷新设备列表</option>
+                </select>
+                <button type="button" onclick="refreshDevices()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #007AFF; background: #007AFF; color: white; border-radius: 6px; cursor: pointer;">刷新设备</button>
+            </div>
+            <div class="form-group">
+                <label for="packageSelect">选择应用:</label>
+                <select id="packageSelect">
+                    <option value="">请先选择设备</option>
+                </select>
+                <button type="button" onclick="refreshApps()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #34C759; background: #34C759; color: white; border-radius: 6px; cursor: pointer;">刷新应用</button>
+            </div>
+            <div style="margin-top: 20px;">
+                <button id="startBtn" class="btn" onclick="startMonitoring()">🚀 开始监控</button>
+                <button id="stopBtn" class="btn stop" onclick="stopMonitoring()" disabled>🛑 停止监控</button>
+            </div>
+        </div>
+
+        <div class="current-values">
+            <div class="value-card">
+                <div class="label">应用CPU使用率</div>
+                <div class="value" id="currentCpu">0%</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">相对单核</div>
+            </div>
+            <div class="value-card">
+                <div class="label">整机CPU使用率</div>
+                <div class="value" id="currentSystemCpu">0%</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">系统总体</div>
+            </div>
+            <div class="value-card">
+                <div class="label">应用内存</div>
+                <div class="value" id="currentMemory">0MB</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;" id="systemMemInfo">系统: 0/0MB</div>
+            </div>
+            <div class="value-card">
+                <div class="label">帧率</div>
+                <div class="value" id="currentFps">0FPS</div>
+            </div>
+            <div class="value-card">
+                <div class="label">线程数</div>
+                <div class="value" id="currentThreads">0</div>
+            </div>
+            <div class="value-card">
+                <div class="label">磁盘读写</div>
+                <div class="value" id="currentDiskReads">0MB</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">写: <span id="currentDiskWrites">0MB</span></div>
+            </div>
+        </div>
+
+        <div class="chart-container" id="cpuChart-container" draggable="true">
+            <h3>📊 CPU使用率</h3>
+            <div class="chart-wrapper" data-chart="cpu">
+                <canvas id="cpuChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="memoryChart-container" draggable="true">
+            <h3>🧠 内存使用量</h3>
+            <div class="chart-wrapper" data-chart="memory">
+                <canvas id="memoryChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="fpsChart-container" draggable="true">
+            <h3>🎮 帧率</h3>
+            <div class="chart-wrapper" data-chart="fps">
+                <canvas id="fpsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="threadsChart-container" draggable="true">
+            <h3>🧵 线程数量</h3>
+            <div class="chart-wrapper" data-chart="threads">
+                <canvas id="threadsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="diskReadsChart-container" draggable="true">
+            <h3>📥 磁盘读取</h3>
+            <div class="chart-wrapper" data-chart="disk_reads">
+                <canvas id="diskReadsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-container" id="diskWritesChart-container" draggable="true">
+            <h3>📤 磁盘写入</h3>
+            <div class="chart-wrapper" data-chart="disk_writes">
+                <canvas id="diskWritesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="statistics-panel" id="statisticsPanel" draggable="true">
+            <h3>📈 数据统计</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">CPU使用率</div>
+                    <div class="stat-current" id="statCpuCurrent">0%</div>
+                    <div class="stat-details">
+                        平均: <span id="statCpuAvg">0%</span> | 
+                        最大: <span id="statCpuMax">0%</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">内存使用</div>
+                    <div class="stat-current" id="statMemoryCurrent">0MB</div>
+                    <div class="stat-details">
+                        平均: <span id="statMemoryAvg">0MB</span> | 
+                        最大: <span id="statMemoryMax">0MB</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">帧率</div>
+                    <div class="stat-current" id="statFpsCurrent">0FPS</div>
+                    <div class="stat-details">
+                        平均: <span id="statFpsAvg">0FPS</span> | 
+                        最小: <span id="statFpsMin">0FPS</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">线程数</div>
+                    <div class="stat-current" id="statThreadsCurrent">0</div>
+                    <div class="stat-details">
+                        平均: <span id="statThreadsAvg">0</span> | 
+                        最大: <span id="statThreadsMax">0</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">磁盘读取</div>
+                    <div class="stat-current" id="statDiskReadsCurrent">0MB</div>
+                    <div class="stat-details">
+                        平均: <span id="statDiskReadsAvg">0MB</span> | 
+                        最大: <span id="statDiskReadsMax">0MB</span>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">磁盘写入</div>
+                    <div class="stat-current" id="statDiskWritesCurrent">0MB</div>
+                    <div class="stat-details">
+                        平均: <span id="statDiskWritesAvg">0MB</span> | 
+                        最大: <span id="statDiskWritesMax">0MB</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="thread-distribution" id="threadDistribution" draggable="true">
+            <h3>🧵 线程分布详情</h3>
+            
+            <div class="thread-summary">
+                <div class="thread-summary-card">
+                    <div class="thread-summary-label">总线程数</div>
+                    <div class="thread-summary-value" id="totalThreads">0</div>
+                </div>
+                <div class="thread-summary-card">
+                    <div class="thread-summary-label">运行中 (R)</div>
+                    <div class="thread-summary-value" id="runningThreads">0</div>
+                </div>
+                <div class="thread-summary-card">
+                    <div class="thread-summary-label">睡眠中 (S)</div>
+                    <div class="thread-summary-value" id="sleepingThreads">0</div>
+                </div>
+                <div class="thread-summary-card">
+                    <div class="thread-summary-label">其他状态</div>
+                    <div class="thread-summary-value" id="otherThreads">0</div>
+                </div>
+            </div>
+
+            <div class="thread-list">
+                <div class="thread-header">
+                    <div>TID</div>
+                    <div>线程名称</div>
+                    <div>状态</div>
+                    <div>类型</div>
+                </div>
+                <div id="threadListContent">
+                    <div style="padding: 20px; text-align: center; color: #86868b; font-style: italic;">
+                        开始监控后将显示线程信息...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='android_script.js') }}"></script>
+</body>
+</html>
