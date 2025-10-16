@@ -1041,3 +1041,12 @@ socket.on('memory_leak_alert', function(data) {
 function closeMemoryLeakAlert() {
     document.getElementById('memoryLeakAlert').classList.remove('show');
 }
+
+// 测试内存泄漏提醒
+function testMemoryLeakAlert() {
+    const alert = document.getElementById('memoryLeakAlert');
+    const message = document.getElementById('leakMessage');
+    message.textContent = '测试：当前内存 245.5MB，增长率 2.3MB/分钟';
+    alert.classList.add('show');
+    console.log('✅ 内存泄漏提醒测试已触发');
+}
