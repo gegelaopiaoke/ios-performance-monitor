@@ -763,6 +763,52 @@ def index():
     """主页面"""
     return render_template('android_index.html')
 
+@app.route('/api/devices')
+def api_get_devices():
+    """获取设备列表 API（兼容 iOS 格式）"""
+    try:
+        device_manager = AndroidDeviceManager()
+        
+        if not device_manager.check_adb_installed():
+            return {'success': False, 'devices': [], 'error': 'ADB未安装'}
+        
+        devices = device_manager.get_connected_devices()
+        device_list = []
+        for d in devices:
+            device_list.append({
+                'udid': d,
+                'name': d,
+                'ConnectionType': 'USB',
+                'DeviceClass': 'Android'
+            })
+        
+        return {'success': True, 'devices': device_list}
+    except Exception as e:
+        return {'success': False, 'devices': [], 'error': str(e)}
+
+@app.route('/api/apps')
+def api_get_apps():
+    """获取应用列表 API（兼容 iOS 格式）"""
+    try:
+        device_id = request.args.get('device')
+        if not device_id:
+            return {'success': False, 'apps': [], 'error': '未指定设备'}
+        
+        device_manager = AndroidDeviceManager()
+        apps = device_manager.get_installed_apps(device_id)
+        
+        app_list = []
+        for app in apps:
+            app_list.append({
+                'bundleId': app,
+                'name': app.split('.')[-1] if '.' in app else app,
+                'displayName': app
+            })
+        
+        return {'success': True, 'apps': app_list}
+    except Exception as e:
+        return {'success': False, 'apps': [], 'error': str(e)}
+
 
 # Socket.IO事件处理
 @socketio.on('connect')
