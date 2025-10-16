@@ -33,6 +33,16 @@ socketio = SocketIO(app,
                   logger=False,            # 禁用日志减少干扰
                   engineio_logger=False)   # 禁用engineio日志
 
+# 导入iOS的内存泄漏检测模块（跨平台通用）
+sys.path.append(os.path.join(project_root, 'ios'))
+from web_visualizer import MemoryLeakDetector, MemoryLeakLogger
+
+# 全局内存泄漏检测器实例（Android专用）
+android_leak_detector = MemoryLeakDetector()
+android_leak_logger = MemoryLeakLogger(
+    log_file_path=os.path.join(project_root, 'logs', 'android_memory_leak_events.log')
+)
+
 # 全局变量存储性能数据
 performance_data = {
     'cpu_data': [],
@@ -179,33 +189,36 @@ class AndroidPerformanceAnalyzer(object):
             return []
     
     def get_app_name(self, package_name):
-        """获取应用的显示名称"""
+        """获取应用的显示名称（优化版）"""
         try:
             cmd = ['adb']
             if self.device_id:
                 cmd.extend(['-s', self.device_id])
             cmd.extend(['shell', 'dumpsys', 'package', package_name])
             
-            result = subprocess.run(cmd, capture_output=True, text=True, timeout=5)
+            # 🔧 将超时时间从5秒增加到10秒，支持WiFi ADB连接
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
             
             if result.returncode == 0:
-                # 从 dumpsys 输出中提取 labelRes 或 applicationInfo 的应用名
+                # 从 dumpsys 输出中提取 applicationLabel
                 lines = result.stdout.split('\n')
                 for i, line in enumerate(lines):
-                    # 尝试找到 applicationLabel
                     if 'applicationLabel=' in line:
                         app_name = line.split('applicationLabel=')[1].strip()
                         if app_name:
                             return app_name
                 
-                # 如果没找到，使用 aapt 获取应用名称（但这需要 apk 路径）
-                # 最后的备用方案：从包名提取最后一段作为显示名
+                # 备用方案：从包名提取最后一段作为显示名
                 return package_name.split('.')[-1].capitalize()
             
+            # 命令执行失败，使用备用方案
             return package_name.split('.')[-1].capitalize()
                 
+        except subprocess.TimeoutExpired:
+            # 超时处理：静默失败，使用包名作为备用
+            return package_name.split('.')[-1].capitalize()
         except Exception as e:
-            print(f"⚠️ 获取应用名称时出错 ({package_name}): {e}")
+            print(f"⚠️ 获取应用名称失败 ({package_name}): {e}")
             return package_name.split('.')[-1].capitalize()
     
     def get_app_pid(self, package_name):
@@ -681,6 +694,37 @@ class AndroidPerformanceAnalyzer(object):
                             'timestamp': data['time']
                         })
                     
+                    # 添加内存样本到泄漏检测器
+                    current_timestamp = time.time()
+                    android_leak_detector.add_memory_sample(perf_data['app_memory'], current_timestamp)
+                    
+                    # 检测内存泄漏
+                    leak_info = android_leak_detector.detect_memory_leak()
+                    if leak_info:
+                        print(f"🚨 Android检测到内存泄漏: {leak_info}")
+                        
+                        # 记录到日志
+                        app_info = {
+                            'pid': pid,
+                            'name': package_name,
+                            'package_name': package_name,
+                            'platform': 'Android'
+                        }
+                        android_leak_logger.log_leak_event(leak_info, app_info)
+                        
+                        # 发送内存泄漏提醒
+                        socketio.emit('memory_leak_alert', {
+                            'detected': True,
+                            'severity': leak_info['severity'],
+                            'current_memory': leak_info['current_memory'],
+                            'growth_rate': leak_info['growth_rate'],
+                            'memory_increase': leak_info['memory_increase'],
+                            'time_span': leak_info['time_span'],
+                            'recommendations': leak_info['recommendation'],
+                            'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                            'platform': 'Android'
+                        })
+                    
                     # 立即发送数据，强制实时传输
                     socketio.emit('performance_data', data)
                     socketio.sleep(0)  # 强制flush
@@ -762,7 +806,7 @@ def handle_get_devices():
 
 @socketio.on('get_apps')
 def handle_get_apps(data):
-    """获取应用列表"""
+    """获取应用列表（优化版）"""
     try:
         device_id = data.get('device_id')
         if not device_id:
@@ -775,22 +819,64 @@ def handle_get_apps(data):
         analyzer = AndroidPerformanceAnalyzer(device_id)
         packages = analyzer.get_installed_packages()
         
+        if not packages:
+            emit('apps_list', {
+                'apps': [],
+                'error': '未找到已安装的应用'
+            })
+            return
+        
         # 获取每个应用的真实名称
         apps = []
-        print(f"🔍 获取 {len(packages)} 个应用的名称...")
-        for pkg in packages:
-            app_name = analyzer.get_app_name(pkg)
-            apps.append({
-                'package_name': pkg,
-                'app_name': app_name,
-                'display_name': f"{app_name} ({pkg})"  # 保留 display_name 以兼容
-            })
+        total = len(packages)
+        success_count = 0
+        timeout_count = 0
         
-        print(f"✅ 成功获取 {len(apps)} 个应用")
+        print(f"🔍 开始获取 {total} 个应用的名称...")
+        
+        for idx, pkg in enumerate(packages, 1):
+            try:
+                app_name = analyzer.get_app_name(pkg)
+                apps.append({
+                    'package_name': pkg,
+                    'app_name': app_name,
+                    'display_name': f"{app_name} ({pkg})"  # 保留 display_name 以兼容
+                })
+                success_count += 1
+                
+                # 每处理10个应用显示一次进度
+                if idx % 10 == 0 or idx == total:
+                    print(f"⌛ 进度: {idx}/{total} (成功: {success_count}, 超时: {timeout_count})")
+                    
+            except subprocess.TimeoutExpired:
+                # 超时的应用使用包名作为备用
+                timeout_count += 1
+                fallback_name = pkg.split('.')[-1].capitalize()
+                apps.append({
+                    'package_name': pkg,
+                    'app_name': fallback_name,
+                    'display_name': f"{fallback_name} ({pkg})"
+                })
+            except Exception as e:
+                # 其他异常也使用备用方案
+                fallback_name = pkg.split('.')[-1].capitalize()
+                apps.append({
+                    'package_name': pkg,
+                    'app_name': fallback_name,
+                    'display_name': f"{fallback_name} ({pkg})"
+                })
+        
+        print(f"✅ 完成获取 {len(apps)} 个应用 (成功: {success_count}, 超时: {timeout_count})")
+        
+        # 按应用名称排序，方便查找
+        apps.sort(key=lambda x: x['app_name'].lower())
+        
         emit('apps_list', {'apps': apps})
         
     except Exception as e:
         print(f"❌ 获取应用列表失败: {e}")
+        import traceback
+        traceback.print_exc()
         emit('apps_list', {
             'apps': [],
             'error': f'获取应用列表失败: {str(e)}'
@@ -872,6 +958,85 @@ def handle_stop_monitoring():
             'message': f'停止监控失败: {str(e)}',
             'type': 'error'
         })
+
+
+# Android内存泄漏检测配置管理事件
+@socketio.on('update_leak_settings')
+def handle_update_leak_settings(data):
+    """更新内存泄漏检测设置"""
+    try:
+        if 'leak_threshold' in data:
+            android_leak_detector.leak_threshold = float(data['leak_threshold'])
+        if 'time_window' in data:
+            android_leak_detector.time_window = int(data['time_window'])
+        if 'growth_rate_threshold' in data:
+            android_leak_detector.growth_rate_threshold = float(data['growth_rate_threshold'])
+        if 'alert_cooldown' in data:
+            android_leak_detector.alert_cooldown = int(data['alert_cooldown'])
+            
+        print(f"📋 Android内存泄漏检测设置已更新: {data}")
+        emit('leak_settings_updated', {
+            'success': True,
+            'settings': {
+                'leak_threshold': android_leak_detector.leak_threshold,
+                'time_window': android_leak_detector.time_window,
+                'growth_rate_threshold': android_leak_detector.growth_rate_threshold,
+                'alert_cooldown': android_leak_detector.alert_cooldown
+            }
+        })
+    except Exception as e:
+        print(f"❌ 更新Android内存泄漏设置失败: {e}")
+        emit('leak_settings_updated', {'success': False, 'error': str(e)})
+
+
+@socketio.on('get_leak_settings')
+def handle_get_leak_settings():
+    """获取当前内存泄漏检测设置"""
+    emit('leak_settings', {
+        'leak_threshold': android_leak_detector.leak_threshold,
+        'time_window': android_leak_detector.time_window,
+        'growth_rate_threshold': android_leak_detector.growth_rate_threshold,
+        'alert_cooldown': android_leak_detector.alert_cooldown,
+        'min_samples': android_leak_detector.min_samples
+    })
+
+
+@socketio.on('reset_leak_detector')
+def handle_reset_leak_detector():
+    """重置内存泄漏检测器"""
+    try:
+        android_leak_detector.memory_history.clear()
+        android_leak_detector.last_alert_time = 0
+        print("🔄 Android内存泄漏检测器已重置")
+        emit('leak_detector_reset', {'success': True})
+    except Exception as e:
+        print(f"❌ 重置Android内存泄漏检测器失败: {e}")
+        emit('leak_detector_reset', {'success': False, 'error': str(e)})
+
+
+@socketio.on('get_leak_events')
+def handle_get_leak_events(data):
+    """获取内存泄漏事件日志"""
+    try:
+        limit = data.get('limit', 50) if data else 50
+        events = android_leak_logger.get_recent_leak_events(limit)
+        print(f"📋 获取到 {len(events)} 条Android内存泄漏事件")
+        emit('leak_events_list', {'events': events, 'success': True})
+    except Exception as e:
+        print(f"❌ 获取Android内存泄漏事件失败: {e}")
+        emit('leak_events_list', {'events': [], 'success': False, 'error': str(e)})
+
+
+@socketio.on('clear_leak_log')
+def handle_clear_leak_log():
+    """清空内存泄漏事件日志"""
+    try:
+        android_leak_logger.clear_log()
+        print("🗑️ Android内存泄漏事件日志已清空")
+        emit('leak_log_cleared', {'success': True})
+    except Exception as e:
+        print(f"❌ 清空Android内存泄漏事件日志失败: {e}")
+        emit('leak_log_cleared', {'success': False, 'error': str(e)})
 
 
 if __name__ == '__main__':

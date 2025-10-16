@@ -146,6 +146,407 @@
             display: none;
         }
         
+        /* 内存泄漏提醒样式 */
+        .memory-leak-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease-in-out;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .memory-leak-alert.show {
+            transform: translateX(0);
+        }
+        
+        .memory-leak-alert.critical {
+            background: linear-gradient(135deg, #ff3b30, #ff6b6b);
+            color: white;
+        }
+        
+        .memory-leak-alert.warning {
+            background: linear-gradient(135deg, #ff9500, #ffb347);
+            color: white;
+        }
+        
+        .memory-leak-alert.minor {
+            background: linear-gradient(135deg, #ffcc02, #ffd93d);
+            color: #333;
+        }
+        
+        .alert-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+        
+        .alert-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+        }
+        
+        .alert-icon {
+            font-size: 24px;
+            margin-right: 8px;
+        }
+        
+        .alert-close {
+            background: none;
+            border: none;
+            color: inherit;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        
+        .alert-close:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .alert-content {
+            margin-bottom: 15px;
+        }
+        
+        .alert-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .metric-item {
+            text-align: center;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+        }
+        
+        .metric-value {
+            font-size: 20px;
+            font-weight: 600;
+            display: block;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .alert-recommendations {
+            margin-top: 15px;
+        }
+        
+        .alert-recommendations h4 {
+            margin: 0 0 8px 0;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .alert-recommendations ul {
+            margin: 0;
+            padding-left: 16px;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+        
+        .alert-recommendations li {
+            margin-bottom: 4px;
+        }
+        
+        /* 内存泄漏设置面板 */
+        .leak-settings {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+        
+        .leak-settings h3 {
+            margin-top: 0;
+            color: #1d1d1f;
+            display: flex;
+            align-items: center;
+        }
+        
+        .leak-settings h3::before {
+            content: "🧠";
+            margin-right: 8px;
+        }
+        
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .setting-item label {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 5px;
+            color: #424245;
+        }
+        
+        .setting-item input {
+            padding: 8px 12px;
+            border: 1px solid #d2d2d7;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        
+        .setting-item input:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.1);
+        }
+        
+        .settings-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-secondary {
+            background: #8e8e93;
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background: #636366;
+        }
+        
+        /* 内存泄漏状态指示器 */
+        .leak-status {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        
+        .leak-status.normal {
+            background: #e8f5e8;
+            color: #34c759;
+        }
+        
+        .leak-status.monitoring {
+            background: #e8f4fd;
+            color: #007aff;
+        }
+        
+        .leak-status.detected {
+            background: #ffeaea;
+            color: #ff3b30;
+        }
+        .scene-controls {
+            background: #f0f8ff;
+            border: 1px solid #007aff;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .scene-controls h4 {
+            margin: 0 0 10px 0;
+            color: #007aff;
+        }
+        .scene-list {
+            margin-top: 15px;
+        }
+        .scene-item {
+            background: white;
+            border: 1px solid #d2d2d7;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .scene-item .scene-info {
+            flex: 1;
+        }
+        .scene-item .scene-time {
+            color: #86868b;
+            font-size: 12px;
+        }
+        .scene-item .scene-actions {
+            margin-left: 10px;
+        }
+        .scene-item button {
+            background: #ff3b30;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .chart-selection-overlay {
+            position: absolute;
+            background: rgba(0, 122, 255, 0.2);
+            border: 2px solid #007aff;
+            pointer-events: none;
+            display: none;
+        }
+        .chart-wrapper {
+            position: relative;
+            height: 300px;
+            cursor: crosshair;
+        }
+        .selecting .chart-wrapper {
+            cursor: crosshair;
+        }
+        .tag-controls {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .tag-controls h4 {
+            margin: 0 0 10px 0;
+            color: #856404;
+        }
+        .tag-item {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+        }
+        .tag-item .tag-info {
+            flex: 1;
+        }
+        .tag-item .tag-time {
+            color: #6c757d;
+            font-size: 12px;
+        }
+        .tag-item .tag-note {
+            color: #495057;
+            font-style: italic;
+            margin-top: 3px;
+        }
+        .tag-item .tag-actions {
+            margin-left: 10px;
+        }
+        .tag-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .chart-tag-marker {
+            position: absolute;
+            width: 2px;
+            background: #ffc107;
+            top: 0;
+            height: 100%;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .chart-tag-marker::after {
+            content: '🏷️';
+            position: absolute;
+            top: -5px;
+            left: -8px;
+            font-size: 16px;
+        }
+        
+        /* 性能阈值和告警样式 */
+        .alert-panel {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+        }
+        .alert-item {
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 6px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .alert-item.warning {
+            background: #fff3cd;
+            border-color: #ffeaa7;
+            color: #856404;
+        }
+        .alert-item.critical {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+            animation: pulse 2s infinite;
+        }
+        
+        /* 性能评分样式 */
+        .score-item {
+            text-align: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .score-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .score-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .score-value {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .score-value.grade-a { color: #28a745; }
+        .score-value.grade-b { color: #17a2b8; }
+        .score-value.grade-c { color: #ffc107; }
+        .score-value.grade-d { color: #fd7e14; }
+        .score-value.grade-f { color: #dc3545; }
+        .score-number {
+            font-size: 12px;
+            color: #888;
+        }
+        
         /* 统计面板样式 */
         .stat-card {
             background: #f8f9fa;
@@ -429,6 +830,54 @@
 
         <div id="status" class="status hidden"></div>
 
+        <!-- 时间范围控制 -->
+        <div class="controls" id="timeControls" style="display: none;">
+            <h3>⏰ 时间范围控制</h3>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <div style="flex: 1;">
+                    <label for="windowSize">显示窗口大小:</label>
+                    <input type="number" id="windowSize" min="10" max="500" value="50" step="10" oninput="updateWindowSize(this.value)" style="width: 80px; padding: 4px;">
+                    <span id="windowSizeValue">50个点</span>
+                </div>
+                <div style="flex: 2;">
+                    <label for="timeSlider">时间轴拖动:</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="range" id="timeSlider" min="0" max="100" value="100" oninput="updateTimePosition(this.value)" style="flex: 1;">
+                        <span id="timePosition">最新</span>
+                        <button onclick="goToLatest()" style="padding: 4px 8px; background: #007aff; color: white; border: none; border-radius: 4px; font-size: 12px;">跳到最新</button>
+                    </div>
+                </div>
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                    <label for="updateInterval">更新间隔（毫秒）:</label>
+                    <input type="range" id="updateInterval" min="500" max="5000" value="1000" oninput="updateInterval(this.value)">
+                    <span id="intervalValue">1000ms</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 场景标记控制 -->
+        <div class="scene-controls" id="sceneControls" style="display: none;">
+            <h4>🎬 场景标记</h4>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <button class="btn" id="startSelectionBtn" onclick="toggleSelection()">开始选择时间区域</button>
+                <input type="text" id="sceneNameInput" placeholder="场景名称" style="padding: 8px; border: 1px solid #d2d2d7; border-radius: 6px; width: 200px;">
+                <button class="btn" id="saveSceneBtn" onclick="saveScene()" disabled>保存场景</button>
+                <button class="btn" id="clearScenesBtn" onclick="clearAllScenes()">清空所有场景</button>
+            </div>
+            <div id="selectionStatus" style="font-size: 14px; color: #86868b; margin-bottom: 10px;"></div>
+            <div class="scene-list" id="sceneList"></div>
+        </div>
+
+        <!-- 单点标签控制 -->
+        <div class="tag-controls" id="tagControls" style="display: none;">
+            <h4>🏷️ 单点标签</h4>
+            <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                <span style="font-size: 14px; color: #856404;">双击图表任意位置添加标签</span>
+                <button class="btn" id="clearTagsBtn" onclick="clearAllTags()">清空所有标签</button>
+            </div>
+            <div class="scene-list" id="tagList"></div>
+        </div>
+
         <div class="current-values" id="currentValues" style="display: none;">
             <div class="value-card">
                 <div class="label">CPU使用率</div>
@@ -556,6 +1005,120 @@
             </div>
         </div>
 
+        <!-- 性能阈值控制面板 -->
+        <div class="controls" id="thresholdControls">
+            <h3>🚨 性能阈值告警</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                <div>
+                    <label>CPU阈值 (%):</label>
+                    <input type="number" id="cpuThreshold" value="80" min="0" max="100">
+                </div>
+                <div>
+                    <label>内存阈值 (MB):</label>
+                    <input type="number" id="memoryThreshold" value="200" min="0">
+                </div>
+                <div>
+                    <label>FPS最低值:</label>
+                    <input type="number" id="fpsThreshold" value="30" min="0" max="60">
+                </div>
+                <div>
+                    <label>线程数上限:</label>
+                    <input type="number" id="threadsThreshold" value="50" min="0">
+                </div>
+            </div>
+            <div id="alertPanel" class="alert-panel" style="display: none;">
+                <h4>⚠️ 性能告警</h4>
+                <div id="alertList"></div>
+            </div>
+        </div>
+
+        <!-- 性能评分面板 -->
+        <!-- 内存泄漏检测设置面板 -->
+        <div class="controls leak-settings" id="leakSettings">
+            <h3>内存泄漏检测设置
+                <span class="leak-status monitoring" id="leakStatus">监控中</span>
+            </h3>
+            <div class="settings-grid">
+                <div class="setting-item">
+                    <label for="leakThreshold">泄漏阈值 (MB):</label>
+                    <input type="number" id="leakThreshold" value="50" min="10" max="500" step="10">
+                </div>
+                <div class="setting-item">
+                    <label for="timeWindow">检测时间窗口 (秒):</label>
+                    <input type="number" id="timeWindow" value="300" min="60" max="1800" step="30">
+                </div>
+                <div class="setting-item">
+                    <label for="growthRateThreshold">增长率阈值 (MB/分钟):</label>
+                    <input type="number" id="growthRateThreshold" value="0.5" min="0.1" max="5.0" step="0.1">
+                </div>
+                <div class="setting-item">
+                    <label for="alertCooldown">提醒冷却时间 (秒):</label>
+                    <input type="number" id="alertCooldown" value="60" min="30" max="300" step="10">
+                </div>
+            </div>
+            <div class="settings-actions">
+                <button type="button" class="btn" onclick="updateLeakSettings()">应用设置</button>
+                <button type="button" class="btn btn-secondary" onclick="resetLeakDetector()">重置检测器</button>
+                <button type="button" class="btn btn-secondary" onclick="loadDefaultLeakSettings()">恢复默认</button>
+            </div>
+        </div>
+
+        <div class="controls" id="scoringPanel">
+            <h3>📊 实时性能评分</h3>
+            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px;">
+                <div class="score-item">
+                    <div class="score-label">CPU评分</div>
+                    <div class="score-value" id="cpuScore">A+</div>
+                    <div class="score-number" id="cpuScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">内存评分</div>
+                    <div class="score-value" id="memoryScore">A+</div>
+                    <div class="score-number" id="memoryScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">FPS评分</div>
+                    <div class="score-value" id="fpsScore">A+</div>
+                    <div class="score-number" id="fpsScoreNum">(95)</div>
+                </div>
+                <div class="score-item">
+                    <div class="score-label">总体评分</div>
+                    <div class="score-value" id="overallScore">A+</div>
+                    <div class="score-number" id="overallScoreNum">(95)</div>
+                </div>
+            </div>
+        </div>
+
+
+
+
+    </div>
+
+    <!-- 分享对话框 -->
+    <div id="shareDialog" class="share-dialog">
+        <div class="share-dialog-content">
+            <h3>🔗 分享实时数据</h3>
+            <p>将以下链接分享给其他人，他们可以实时查看你的性能监控数据：</p>
+            
+            <div class="share-url" id="shareUrl">
+                正在获取分享链接...
+            </div>
+            
+            <div>
+                <button class="copy-btn" onclick="copyShareUrl()">📋 复制链接</button>
+                <button class="close-btn" onclick="closeShareDialog()">关闭</button>
+            </div>
+            
+            <div class="share-tips">
+                <h4>💡 使用说明：</h4>
+                <ul>
+                    <li>确保分享对象与你在同一网络环境中（如同一WiFi）</li>
+                    <li>如果无法访问，可能需要关闭防火墙或允许端口5001</li>
+                    <li>分享的是实时数据，他们能看到你当前的性能监控状态</li>
+                    <li>停止监控后，分享的页面也会停止更新</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -2281,6 +2844,42 @@
             }
         });
 
+        // 内存泄漏提醒事件处理
+        socket.on('memory_leak_alert', function(data) {
+            console.log('收到内存泄漏提醒:', data);
+            showMemoryLeakAlert(data);
+            updateLeakStatus('detected', '检测到泄漏');
+        });
+
+        // 内存泄漏设置更新响应
+        socket.on('leak_settings_updated', function(data) {
+            if (data.success) {
+                console.log('内存泄漏设置已更新:', data.settings);
+                showStatus('内存泄漏检测设置已更新', 'success');
+            } else {
+                console.error('更新内存泄漏设置失败:', data.error);
+                showStatus('更新内存泄漏设置失败: ' + data.error, 'error');
+            }
+        });
+
+        // 内存泄漏检测器重置响应
+        socket.on('leak_detector_reset', function(data) {
+            if (data.success) {
+                console.log('内存泄漏检测器已重置');
+                showStatus('内存泄漏检测器已重置', 'success');
+                updateLeakStatus('monitoring', '监控中');
+            } else {
+                console.error('重置内存泄漏检测器失败:', data.error);
+                showStatus('重置内存泄漏检测器失败: ' + data.error, 'error');
+            }
+        });
+
+        // 获取内存泄漏设置响应
+        socket.on('leak_settings', function(data) {
+            console.log('收到内存泄漏设置:', data);
+            loadLeakSettingsToUI(data);
+        });
+
         // 性能统计更新函数
         function updatePerformanceStats(cpu, memory, fps, threads, diskReads = 0, diskWrites = 0) {
             // 更新CPU统计
@@ -2513,30 +3112,50 @@
             const memory = performanceStats.memory.current;
             const fps = performanceStats.fps.current;
             
-            // CPU评分 (0-100)
-            let cpuScore = Math.max(0, 100 - cpu);
-            if (cpu < 30) cpuScore = 100;
-            else if (cpu < 50) cpuScore = 90;
-            else if (cpu < 70) cpuScore = 75;
-            else if (cpu < 85) cpuScore = 60;
-            else cpuScore = Math.max(0, 100 - cpu);
+            // 获取用户设置的阈值
+            const cpuThresholdEl = document.getElementById('cpuThreshold');
+            const memoryThresholdEl = document.getElementById('memoryThreshold');
+            const fpsThresholdEl = document.getElementById('fpsThreshold');
             
-            // 内存评分 (假设200MB为基准)
-            let memoryScore = Math.max(0, 100 - (memory / 200) * 100);
-            if (memory < 100) memoryScore = 100;
-            else if (memory < 150) memoryScore = 90;
-            else if (memory < 200) memoryScore = 75;
-            else if (memory < 300) memoryScore = 60;
-            else memoryScore = Math.max(0, 100 - ((memory - 200) / 200) * 100);
+            const cpuThreshold = cpuThresholdEl ? parseFloat(cpuThresholdEl.value) : 80;
+            const memoryThreshold = memoryThresholdEl ? parseFloat(memoryThresholdEl.value) : 200;
+            const fpsThreshold = fpsThresholdEl ? parseFloat(fpsThresholdEl.value) : 30;
             
-            // FPS评分
+            // 调试输出
+            console.log(`评分阈值 - CPU: ${cpuThreshold}%, 内存: ${memoryThreshold}MB, FPS: ${fpsThreshold}`);
+            console.log(`当前值 - CPU: ${cpu}%, 内存: ${memory}MB, FPS: ${fps}`);
+            
+            // CPU评分：基于阈值百分比
+            let cpuScore = 100;
+            if (cpu > 0) {
+                const cpuPercent = (cpu / cpuThreshold) * 100;
+                if (cpuPercent <= 50) cpuScore = 100;
+                else if (cpuPercent <= 70) cpuScore = 90;
+                else if (cpuPercent <= 85) cpuScore = 75;
+                else if (cpuPercent <= 100) cpuScore = 60;
+                else cpuScore = Math.max(0, 60 - (cpuPercent - 100) * 0.5);
+            }
+            
+            // 内存评分：基于用户设置的阈值
+            let memoryScore = 100;
+            if (memory > 0) {
+                const memoryPercent = (memory / memoryThreshold) * 100;
+                if (memoryPercent <= 50) memoryScore = 100;
+                else if (memoryPercent <= 70) memoryScore = 90;
+                else if (memoryPercent <= 85) memoryScore = 75;
+                else if (memoryPercent <= 100) memoryScore = 60;
+                else memoryScore = Math.max(0, 60 - (memoryPercent - 100) * 0.5);
+            }
+            
+            // FPS评分：基于阈值
             let fpsScore = 100;
             if (fps > 0) {
-                if (fps >= 55) fpsScore = 100;
-                else if (fps >= 45) fpsScore = 90;
-                else if (fps >= 30) fpsScore = 75;
-                else if (fps >= 20) fpsScore = 60;
-                else fpsScore = Math.max(0, (fps / 20) * 60);
+                const fpsPercent = (fps / 60) * 100; // 60fps为满分
+                if (fpsPercent >= 90) fpsScore = 100;
+                else if (fpsPercent >= 75) fpsScore = 90;
+                else if (fpsPercent >= 50) fpsScore = 75;
+                else if (fpsPercent >= 33) fpsScore = 60;
+                else fpsScore = Math.max(0, fpsPercent * 1.8);
             }
             
             return {
@@ -3368,10 +3987,154 @@
             }
         }
         
+        // 内存泄漏相关函数
+        function showMemoryLeakAlert(data) {
+            const alertEl = document.getElementById('memoryLeakAlert');
+            const titleEl = document.getElementById('alertTitle');
+            const currentMemoryEl = document.getElementById('currentMemoryValue');
+            const growthRateEl = document.getElementById('growthRateValue');
+            const memoryIncreaseEl = document.getElementById('memoryIncreaseValue');
+            const timeSpanEl = document.getElementById('timeSpanValue');
+            const recommendationsEl = document.getElementById('recommendationsList');
+
+            // 设置严重程度样式
+            alertEl.className = `memory-leak-alert ${data.severity}`;
+            
+            // 更新标题
+            const severityText = {
+                'critical': '严重内存泄漏',
+                'warning': '内存泄漏警告',
+                'minor': '轻微内存增长'
+            };
+            titleEl.textContent = severityText[data.severity] || '内存泄漏检测';
+
+            // 更新指标
+            currentMemoryEl.textContent = data.current_memory.toFixed(1);
+            growthRateEl.textContent = data.growth_rate;
+            memoryIncreaseEl.textContent = data.memory_increase;
+            timeSpanEl.textContent = data.time_span;
+
+            // 更新建议列表
+            recommendationsEl.innerHTML = '';
+            data.recommendations.forEach(recommendation => {
+                const li = document.createElement('li');
+                li.textContent = recommendation;
+                recommendationsEl.appendChild(li);
+            });
+
+            // 显示提醒
+            setTimeout(() => {
+                alertEl.classList.add('show');
+            }, 100);
+
+            // 自动隐藏（根据严重程度调整时间）
+            const autoHideTime = {
+                'critical': 15000,  // 15秒
+                'warning': 10000,   // 10秒
+                'minor': 8000       // 8秒
+            };
+            setTimeout(() => {
+                closeMemoryLeakAlert();
+            }, autoHideTime[data.severity] || 10000);
+
+            // 播放提醒音效（如果浏览器支持）
+            try {
+                const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZURE');
+                audio.volume = 0.3;
+                audio.play().catch(() => {}); // 忽略播放失败
+            } catch (e) {}
+        }
+
+        function closeMemoryLeakAlert() {
+            const alertEl = document.getElementById('memoryLeakAlert');
+            alertEl.classList.remove('show');
+        }
+
+        function updateLeakStatus(status, text) {
+            const statusEl = document.getElementById('leakStatus');
+            if (statusEl) {
+                statusEl.className = `leak-status ${status}`;
+                statusEl.textContent = text;
+            }
+        }
+
+        function updateLeakSettings() {
+            const settings = {
+                leak_threshold: parseFloat(document.getElementById('leakThreshold').value),
+                time_window: parseInt(document.getElementById('timeWindow').value),
+                growth_rate_threshold: parseFloat(document.getElementById('growthRateThreshold').value),
+                alert_cooldown: parseInt(document.getElementById('alertCooldown').value)
+            };
+
+            console.log('更新内存泄漏设置:', settings);
+            socket.emit('update_leak_settings', settings);
+        }
+
+        function resetLeakDetector() {
+            if (confirm('确定要重置内存泄漏检测器吗？这将清除所有历史数据。')) {
+                socket.emit('reset_leak_detector');
+            }
+        }
+
+        function loadDefaultLeakSettings() {
+            document.getElementById('leakThreshold').value = 50;
+            document.getElementById('timeWindow').value = 300;
+            document.getElementById('growthRateThreshold').value = 0.5;
+            document.getElementById('alertCooldown').value = 60;
+            
+            updateLeakSettings();
+        }
+
+        function loadLeakSettingsToUI(settings) {
+            document.getElementById('leakThreshold').value = settings.leak_threshold;
+            document.getElementById('timeWindow').value = settings.time_window;
+            document.getElementById('growthRateThreshold').value = settings.growth_rate_threshold;
+            document.getElementById('alertCooldown').value = settings.alert_cooldown;
+        }
+
         // 页面加载完成后自动检测设备
         document.addEventListener('DOMContentLoaded', function() {
             refreshDevices();
+            // 获取当前内存泄漏设置
+            socket.emit('get_leak_settings');
         });
     </script>
+
+    <!-- 内存泄漏提醒弹窗 -->
+    <div id="memoryLeakAlert" class="memory-leak-alert">
+        <div class="alert-header">
+            <div class="alert-title">
+                <span class="alert-icon">🚨</span>
+                <span id="alertTitle">检测到内存泄漏</span>
+            </div>
+            <button class="alert-close" onclick="closeMemoryLeakAlert()">&times;</button>
+        </div>
+        <div class="alert-content">
+            <div class="alert-metrics">
+                <div class="metric-item">
+                    <span class="metric-value" id="currentMemoryValue">0</span>
+                    <span class="metric-label">当前内存 (MB)</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value" id="growthRateValue">0</span>
+                    <span class="metric-label">增长率 (MB/分钟)</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value" id="memoryIncreaseValue">0</span>
+                    <span class="metric-label">内存增长 (MB)</span>
+                </div>
+                <div class="metric-item">
+                    <span class="metric-value" id="timeSpanValue">0</span>
+                    <span class="metric-label">检测时长 (分钟)</span>
+                </div>
+            </div>
+            <div class="alert-recommendations">
+                <h4>优化建议:</h4>
+                <ul id="recommendationsList">
+                    <li>正在分析...</li>
+                </ul>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

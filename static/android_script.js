@@ -12,6 +12,7 @@ let allFpsData = []; // 存储所有FPS数据
 let allThreadsData = []; // 存储所有线程数据
 let allDiskReadsData = []; // 存储所有磁盘读取数据
 let allDiskWritesData = []; // 存储所有磁盘写入数据
+let allApps = []; // 存储完整应用列表用于搜索
 
 // 性能统计数据
 let performanceStats = {
@@ -422,6 +423,7 @@ function onDeviceChanged() {
         // 清空应用列表
         const packageSelect = document.getElementById('packageSelect');
         packageSelect.innerHTML = '<option value="">请先选择设备</option>';
+        allApps = []; // 清空应用列表
     }
 }
 
@@ -435,6 +437,43 @@ function refreshApps() {
     
     showStatus('正在获取应用列表...', 'info');
     socket.emit('get_apps', { device_id: deviceId });
+}
+
+// 搜索应用功能
+function filterApps() {
+    const searchInput = document.getElementById('appSearch');
+    const packageSelect = document.getElementById('packageSelect');
+    
+    if (!searchInput || !packageSelect) return;
+    
+    const searchTerm = searchInput.value.toLowerCase().trim();
+    
+    // 清空当前选项
+    packageSelect.innerHTML = '';
+    
+    // 如果搜索条件为空，显示所有应用
+    const filteredApps = searchTerm === '' 
+        ? allApps 
+        : allApps.filter(app => {
+            const appName = (app.app_name || '').toLowerCase();
+            const packageName = (app.package_name || '').toLowerCase();
+            return appName.includes(searchTerm) || packageName.includes(searchTerm);
+        });
+    
+    // 显示过滤后的应用
+    if (filteredApps.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = searchTerm === '' ? '请先选择设备' : '未找到匹配的应用';
+        packageSelect.appendChild(option);
+    } else {
+        filteredApps.forEach(app => {
+            const option = document.createElement('option');
+            option.value = app.package_name;
+            option.textContent = `${app.app_name} (${app.package_name})`;
+            packageSelect.appendChild(option);
+        });
+    }
 }
 
 // 更新性能统计
@@ -554,29 +593,45 @@ socket.on('devices_list', function(data) {
 
 socket.on('apps_list', function(data) {
     const packageSelect = document.getElementById('packageSelect');
-    packageSelect.innerHTML = '<option value="">请选择应用</option>';
+    const appSearch = document.getElementById('appSearch');
     
     // 检查是否有错误
     if (data.error) {
         showStatus(data.error, 'error');
+        packageSelect.innerHTML = '<option value="">获取应用列表失败</option>';
+        allApps = [];
         return;
     }
     
     // 确保 apps是数组
     const apps = data.apps || [];
     
-    apps.forEach(app => {
-        const option = document.createElement('option');
-        option.value = app.package_name;
-        // 🔒 显示格式：应用名称(包名)
-        option.textContent = `${app.app_name} (${app.package_name})`;
-        packageSelect.appendChild(option);
-    });
+    // 保存完整应用列表用于搜索
+    allApps = apps;
     
-    if (apps.length > 0) {
-        showStatus(`发现 ${apps.length} 个应用`, 'success');
-    } else {
+    // 清空搜索框
+    if (appSearch) {
+        appSearch.value = '';
+    }
+    
+    // 显示所有应用
+    packageSelect.innerHTML = '';
+    
+    if (apps.length === 0) {
+        const option = document.createElement('option');
+        option.value = '';
+        option.textContent = '未发现应用';
+        packageSelect.appendChild(option);
         showStatus('未发现应用，请检查设备状态', 'error');
+    } else {
+        apps.forEach(app => {
+            const option = document.createElement('option');
+            option.value = app.package_name;
+            // 🔒 显示格式：应用名称(包名)
+            option.textContent = `${app.app_name} (${app.package_name})`;
+            packageSelect.appendChild(option);
+        });
+        showStatus(`发现 ${apps.length} 个应用，可使用搜索框过滤`, 'success');
     }
 });
 

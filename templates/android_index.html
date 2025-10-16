@@ -84,6 +84,14 @@
             border-color: #007aff;
             box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
         }
+        /* 搜索框特殊样式 */
+        #appSearch {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="%23999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><path d="m21 21-4.35-4.35"></path></svg>');
+            background-repeat: no-repeat;
+            background-position: 12px center;
+            background-size: 16px 16px;
+            padding-left: 40px;
+        }
         .btn {
             background: #007aff;
             color: white;
@@ -371,11 +379,15 @@
                 <button type="button" onclick="refreshDevices()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #007AFF; background: #007AFF; color: white; border-radius: 6px; cursor: pointer;">刷新设备</button>
             </div>
             <div class="form-group">
+                <label for="appSearch">搜索应用:</label>
+                <input type="text" id="appSearch" placeholder="输入应用名称或包名搜索..." oninput="filterApps()">
+            </div>
+            <div class="form-group">
                 <label for="packageSelect">选择应用:</label>
-                <select id="packageSelect">
+                <select id="packageSelect" size="8" style="height: 200px;">
                     <option value="">请先选择设备</option>
                 </select>
-                <button type="button" onclick="refreshApps()" style="margin-left: 8px; padding: 8px 12px; border: 1px solid #34C759; background: #34C759; color: white; border-radius: 6px; cursor: pointer;">刷新应用</button>
+                <button type="button" onclick="refreshApps()" style="margin-top: 8px; padding: 8px 12px; border: 1px solid #34C759; background: #34C759; color: white; border-radius: 6px; cursor: pointer;">刷新应用</button>
             </div>
             <div style="margin-top: 20px;">
                 <button id="startBtn" class="btn" onclick="startMonitoring()">🚀 开始监控</button>

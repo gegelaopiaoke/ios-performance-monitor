@@ -30,6 +30,277 @@ from ios_device.cli.cli import print_json
 from ios_device.util.utils import convertBytes
 from ios_device.remote.remote_lockdown import RemoteLockdownClient
 
+# 内存泄漏检测算法
+class MemoryLeakDetector:
+    """内存泄漏检测器"""
+    
+    def __init__(self):
+        self.memory_history = []
+        self.leak_threshold = 50  # MB
+        self.time_window = 300    # 5分钟
+        self.min_samples = 10
+        self.growth_rate_threshold = 0.5  # MB/分钟
+        self.last_alert_time = 0
+        self.alert_cooldown = 60  # 1分钟冷却
+        
+        # 新增：基线追踪和回收检测
+        self.baseline_memory = None  # 初始基线内存
+        self.peak_memory = 0  # 峰值内存
+        self.last_drop_time = None  # 上次内存下降的时间
+        self.no_drop_threshold = 120  # 120秒内没有内存下降才认为可能泄漏
+        self.drop_threshold = 20  # 内存下降超过20MB认为是回收
+        
+    def add_memory_sample(self, memory_mb, timestamp):
+        """添加内存样本数据"""
+        # 设置初始基线
+        if self.baseline_memory is None:
+            self.baseline_memory = memory_mb
+        
+        # 检测内存下降（回收）
+        if len(self.memory_history) > 0:
+            last_memory = self.memory_history[-1]['memory']
+            # 如果内存下降超过阈值，认为发生了回收
+            if last_memory - memory_mb > self.drop_threshold:
+                self.last_drop_time = timestamp
+                print(f"🔄 检测到内存回收: {last_memory:.1f}MB -> {memory_mb:.1f}MB (下降{last_memory - memory_mb:.1f}MB)")
+        
+        # 更新峰值
+        if memory_mb > self.peak_memory:
+            self.peak_memory = memory_mb
+        
+        self.memory_history.append({
+            'memory': memory_mb,
+            'timestamp': timestamp,
+            'time_str': datetime.fromtimestamp(timestamp).strftime('%H:%M:%S')
+        })
+        
+        # 清理超出时间窗口的旧数据
+        current_time = timestamp
+        self.memory_history = [
+            sample for sample in self.memory_history 
+            if current_time - sample['timestamp'] <= self.time_window
+        ]
+        
+    def detect_memory_leak(self):
+        """检测内存泄漏 - 改进版：考虑实际使用场景"""
+        if len(self.memory_history) < self.min_samples:
+            return None
+        
+        current_time = time.time()
+        current_memory = self.memory_history[-1]['memory']
+        
+        # 关键改进1：检查是否有内存回收
+        # 如果最近有内存下降（回收），说明不是泄漏，是正常的加载-回收循环
+        if self.last_drop_time and (current_time - self.last_drop_time < self.no_drop_threshold):
+            # 最近有回收，不报警
+            return None
+        
+        # 关键改进2：只有在长时间持续增长且没有回收时才报警
+        leak_info = self._analyze_memory_trend()
+        
+        if not leak_info or not leak_info['is_leak']:
+            return None
+        
+        # 关键改进3：检查是否超出合理范围
+        # 如果当前内存比基线高太多，且长时间没有回收，才认为是泄漏
+        memory_increase_from_baseline = current_memory - self.baseline_memory
+        
+        # 判断条件：
+        # 1. 内存持续增长
+        # 2. 超过基线50MB以上
+        # 3. 120秒内没有发生内存回收
+        if (leak_info['is_leak'] and 
+            memory_increase_from_baseline > self.leak_threshold and
+            (self.last_drop_time is None or current_time - self.last_drop_time > self.no_drop_threshold)):
+            
+            # 检查是否需要发送提醒（冷却时间）
+            if current_time - self.last_alert_time > self.alert_cooldown:
+                self.last_alert_time = current_time
+                leak_info['baseline_memory'] = self.baseline_memory
+                leak_info['no_recycle_duration'] = (
+                    current_time - self.last_drop_time if self.last_drop_time 
+                    else current_time - self.memory_history[0]['timestamp']
+                )
+                return leak_info
+            
+        return None
+        
+    def _analyze_memory_trend(self):
+        """分析内存使用趋势"""
+        if len(self.memory_history) < self.min_samples:
+            return None
+            
+        # 获取最近的内存数据
+        recent_data = self.memory_history[-self.min_samples:]
+        
+        # 计算线性回归斜率（内存增长率）
+        x_values = [i for i in range(len(recent_data))]
+        y_values = [sample['memory'] for sample in recent_data]
+        
+        # 简单线性回归计算斜率
+        n = len(x_values)
+        sum_x = sum(x_values)
+        sum_y = sum(y_values)
+        sum_xy = sum(x * y for x, y in zip(x_values, y_values))
+        sum_x2 = sum(x * x for x in x_values)
+        
+        # 斜率计算
+        if n * sum_x2 - sum_x * sum_x != 0:
+            slope = (n * sum_xy - sum_x * sum_y) / (n * sum_x2 - sum_x * sum_x)
+        else:
+            slope = 0
+            
+        # 将斜率转换为每分钟MB增长率
+        time_span_minutes = (recent_data[-1]['timestamp'] - recent_data[0]['timestamp']) / 60
+        if time_span_minutes > 0:
+            growth_rate_per_minute = slope * (len(recent_data) / time_span_minutes)
+        else:
+            growth_rate_per_minute = 0
+            
+        # 计算当前内存使用量
+        current_memory = recent_data[-1]['memory']
+        max_memory = max(y_values)
+        min_memory = min(y_values)
+        memory_increase = max_memory - min_memory
+        
+        # 判断是否存在内存泄漏
+        is_leak = (
+            growth_rate_per_minute > self.growth_rate_threshold and
+            memory_increase > self.leak_threshold and
+            current_memory > min_memory + self.leak_threshold
+        )
+        
+        return {
+            'is_leak': is_leak,
+            'current_memory': current_memory,
+            'growth_rate': round(growth_rate_per_minute, 2),
+            'memory_increase': round(memory_increase, 2),
+            'time_span': round(time_span_minutes, 1),
+            'samples_count': len(recent_data),
+            'severity': self._calculate_severity(growth_rate_per_minute, memory_increase),
+            'recommendation': self._get_recommendation(growth_rate_per_minute, memory_increase)
+        }
+        
+    def _calculate_severity(self, growth_rate, memory_increase):
+        """计算泄漏严重程度"""
+        if growth_rate > 2.0 or memory_increase > 200:
+            return 'critical'  # 严重
+        elif growth_rate > 1.0 or memory_increase > 100:
+            return 'warning'   # 警告
+        else:
+            return 'minor'     # 轻微
+            
+    def _get_recommendation(self, growth_rate, memory_increase):
+        """获取优化建议 - 改进版"""
+        recommendations = []
+        
+        # 强调：长时间没有回收才是问题
+        recommendations.append("⚠️ 关键问题：长时间内存持续增长且没有回收")
+        
+        if growth_rate > 2.0:
+            recommendations.append("内存增长率过快，建议检查是否有循环引用或监听器未移除")
+        elif growth_rate > 1.0:
+            recommendations.append("内存持续增长，建议检查对象生命周期管理")
+            
+        if memory_increase > 200:
+            recommendations.append("内存增长超过200MB，建议检查：")
+            recommendations.append("  • 大对象（图片、视频）是否正确释放")
+            recommendations.append("  • 缓存策略是否合理")
+        elif memory_increase > 100:
+            recommendations.append("建议检查资源释放逻辑（如页面切换、播放器销毁）")
+        
+        # 提示正常场景
+        recommendations.append("💡 注意：进入播放器等场景的内存增长是正常的")
+        recommendations.append("💡 问题关键：退出后内存是否能回收")
+            
+        return recommendations
+
+# 全局内存泄漏检测器实例
+leak_detector = MemoryLeakDetector()
+
+# 内存泄漏事件日志记录
+class MemoryLeakLogger:
+    """内存泄漏事件日志记录器"""
+    
+    def __init__(self, log_file_path=None):
+        self.log_file_path = log_file_path or os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 
+            'logs', 
+            'memory_leak_events.log'
+        )
+        self.ensure_log_directory()
+        
+    def ensure_log_directory(self):
+        """确保日志目录存在"""
+        log_dir = os.path.dirname(self.log_file_path)
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir, exist_ok=True)
+    
+    def log_leak_event(self, leak_info, app_info=None):
+        """记录内存泄漏事件"""
+        try:
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            
+            log_entry = {
+                'timestamp': timestamp,
+                'event_type': 'memory_leak_detected',
+                'severity': leak_info['severity'],
+                'current_memory': leak_info['current_memory'],
+                'growth_rate': leak_info['growth_rate'],
+                'memory_increase': leak_info['memory_increase'],
+                'time_span': leak_info['time_span'],
+                'samples_count': leak_info['samples_count'],
+                'recommendations': leak_info['recommendation'],
+                'app_info': app_info or {}
+            }
+            
+            # 写入日志文件
+            with open(self.log_file_path, 'a', encoding='utf-8') as f:
+                f.write(json.dumps(log_entry, ensure_ascii=False) + '\n')
+            
+            print(f"📝 内存泄漏事件已记录到日志: {self.log_file_path}")
+            
+        except Exception as e:
+            print(f"❌ 记录内存泄漏事件失败: {e}")
+    
+    def get_recent_leak_events(self, limit=50):
+        """获取最近的内存泄漏事件"""
+        try:
+            if not os.path.exists(self.log_file_path):
+                return []
+            
+            events = []
+            with open(self.log_file_path, 'r', encoding='utf-8') as f:
+                lines = f.readlines()
+                
+            # 获取最后limit行
+            recent_lines = lines[-limit:] if len(lines) > limit else lines
+            
+            for line in recent_lines:
+                try:
+                    event = json.loads(line.strip())
+                    events.append(event)
+                except json.JSONDecodeError:
+                    continue
+            
+            return events
+            
+        except Exception as e:
+            print(f"❌ 读取内存泄漏事件日志失败: {e}")
+            return []
+    
+    def clear_log(self):
+        """清空日志文件"""
+        try:
+            with open(self.log_file_path, 'w', encoding='utf-8') as f:
+                f.write('')
+            print(f"🗑️ 内存泄漏事件日志已清空")
+        except Exception as e:
+            print(f"❌ 清空内存泄漏事件日志失败: {e}")
+
+# 全局内存泄漏日志记录器实例
+leak_logger = MemoryLeakLogger()
+
 
 import os
 
@@ -58,6 +329,18 @@ performance_data = {
     'disk_reads_data': [],
     'disk_writes_data': [],
     'threads_data': []
+}
+
+# 内存泄漏检测相关变量
+memory_leak_detector = {
+    'memory_history': [],  # 内存使用历史记录
+    'leak_threshold': 50,  # 内存泄漏阈值（MB）
+    'time_window': 300,    # 检测时间窗口（秒）
+    'min_samples': 10,     # 最小样本数
+    'leak_detected': False,
+    'last_alert_time': 0,
+    'alert_cooldown': 60,  # 提醒冷却时间（秒）
+    'growth_rate_threshold': 0.5  # 内存增长率阈值（MB/分钟）
 }
 
 # 监控状态管理
@@ -309,6 +592,35 @@ class LegacyIOSPerformanceAnalyzer(object):
                         'name': name
                     }
                     
+                    # 添加内存样本到泄漏检测器
+                    current_timestamp = time.time()
+                    leak_detector.add_memory_sample(memory, current_timestamp)
+                    
+                    # 检测内存泄漏
+                    leak_info = leak_detector.detect_memory_leak()
+                    if leak_info:
+                        print(f"🚨 检测到内存泄漏 (Legacy): {leak_info}")
+                        
+                        # 记录到日志
+                        app_info = {
+                            'pid': pid,
+                            'name': name,
+                            'bundle_id': 'legacy_mode'
+                        }
+                        leak_logger.log_leak_event(leak_info, app_info)
+                        
+                        # 发送内存泄漏提醒
+                        socketio.emit('memory_leak_alert', {
+                            'detected': True,
+                            'severity': leak_info['severity'],
+                            'current_memory': leak_info['current_memory'],
+                            'growth_rate': leak_info['growth_rate'],
+                            'memory_increase': leak_info['memory_increase'],
+                            'time_span': leak_info['time_span'],
+                            'recommendations': leak_info['recommendation'],
+                            'timestamp': datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                        })
+                    
                     # 使用节流机制发送数据
                     self.throttled_send_data(data)
                     return
@@ -486,10 +798,11 @@ class WebPerformanceAnalyzer(object):
      
                             
                             # 发送数据到Web界面
+                            memory_mb = memory_bytes / (1024 * 1024)  # 转换为MB
                             data = {
                                 'time': attrs.Time,
                                 'cpu': cpu_value,
-                                'memory': memory_bytes / (1024 * 1024),  # 转换为MB
+                                'memory': memory_mb,
                                 'threads': attrs.Threads,
                                 'fps': attrs.FPS,
                                 'pid': attrs.Pid,
@@ -497,6 +810,36 @@ class WebPerformanceAnalyzer(object):
                                 'disk_reads': disk_reads_bytes / (1024 * 1024),  # 转换为MB
                                 'disk_writes': disk_writes_bytes / (1024 * 1024)  # 转换为MB
                             }
+                            
+                            # 添加内存样本到泄漏检测器
+                            current_timestamp = time.time()
+                            leak_detector.add_memory_sample(memory_mb, current_timestamp)
+                            
+                            # 检测内存泄漏
+                            leak_info = leak_detector.detect_memory_leak()
+                            if leak_info:
+                                print(f"🚨 检测到内存泄漏: {leak_info}")
+                                
+                                # 记录到日志
+                                app_info = {
+                                    'pid': attrs.Pid,
+                                    'name': attrs.Name,
+                                    'bundle_id': bundle_id if 'bundle_id' in locals() else 'unknown'
+                                }
+                                leak_logger.log_leak_event(leak_info, app_info)
+                                
+                                # 发送内存泄漏提醒
+                                socketio.emit('memory_leak_alert', {
+                                    'detected': True,
+                                    'severity': leak_info['severity'],
+                                    'current_memory': leak_info['current_memory'],
+                                    'growth_rate': leak_info['growth_rate'],
+                                    'memory_increase': leak_info['memory_increase'],
+                                    'time_span': leak_info['time_span'],
+                                    'recommendations': leak_info['recommendation'],
+                                    'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+                                })
+                            
                             # 立即发送数据，强制实时传输
                             socketio.emit('performance_data', data)
                             socketio.sleep(0)  # 强制flush
@@ -988,6 +1331,84 @@ def handle_get_apps(data):
     except Exception as e:
         print(f"Socket.IO获取应用失败: {e}")
         emit('apps_list', {'apps': [], 'error': str(e)})
+
+
+@socketio.on('update_leak_settings')
+def handle_update_leak_settings(data):
+    """更新内存泄漏检测设置"""
+    try:
+        if 'leak_threshold' in data:
+            leak_detector.leak_threshold = float(data['leak_threshold'])
+        if 'time_window' in data:
+            leak_detector.time_window = int(data['time_window'])
+        if 'growth_rate_threshold' in data:
+            leak_detector.growth_rate_threshold = float(data['growth_rate_threshold'])
+        if 'alert_cooldown' in data:
+            leak_detector.alert_cooldown = int(data['alert_cooldown'])
+            
+        print(f"📋 内存泄漏检测设置已更新: {data}")
+        emit('leak_settings_updated', {
+            'success': True,
+            'settings': {
+                'leak_threshold': leak_detector.leak_threshold,
+                'time_window': leak_detector.time_window,
+                'growth_rate_threshold': leak_detector.growth_rate_threshold,
+                'alert_cooldown': leak_detector.alert_cooldown
+            }
+        })
+    except Exception as e:
+        print(f"❌ 更新内存泄漏设置失败: {e}")
+        emit('leak_settings_updated', {'success': False, 'error': str(e)})
+
+
+@socketio.on('get_leak_settings')
+def handle_get_leak_settings():
+    """获取当前内存泄漏检测设置"""
+    emit('leak_settings', {
+        'leak_threshold': leak_detector.leak_threshold,
+        'time_window': leak_detector.time_window,
+        'growth_rate_threshold': leak_detector.growth_rate_threshold,
+        'alert_cooldown': leak_detector.alert_cooldown,
+        'min_samples': leak_detector.min_samples
+    })
+
+
+@socketio.on('reset_leak_detector')
+def handle_reset_leak_detector():
+    """重置内存泄漏检测器"""
+    try:
+        leak_detector.memory_history.clear()
+        leak_detector.last_alert_time = 0
+        print("🔄 内存泄漏检测器已重置")
+        emit('leak_detector_reset', {'success': True})
+    except Exception as e:
+        print(f"❌ 重置内存泄漏检测器失败: {e}")
+        emit('leak_detector_reset', {'success': False, 'error': str(e)})
+
+
+@socketio.on('get_leak_events')
+def handle_get_leak_events(data):
+    """获取内存泄漏事件日志"""
+    try:
+        limit = data.get('limit', 50) if data else 50
+        events = leak_logger.get_recent_leak_events(limit)
+        print(f"📋 获取到 {len(events)} 条内存泄漏事件")
+        emit('leak_events_list', {'events': events, 'success': True})
+    except Exception as e:
+        print(f"❌ 获取内存泄漏事件失败: {e}")
+        emit('leak_events_list', {'events': [], 'success': False, 'error': str(e)})
+
+
+@socketio.on('clear_leak_log')
+def handle_clear_leak_log():
+    """清空内存泄漏事件日志"""
+    try:
+        leak_logger.clear_log()
+        print("🗑️ 内存泄漏事件日志已清空")
+        emit('leak_log_cleared', {'success': True})
+    except Exception as e:
+        print(f"❌ 清空内存泄漏事件日志失败: {e}")
+        emit('leak_log_cleared', {'success': False, 'error': str(e)})
 
 
 if __name__ == '__main__':

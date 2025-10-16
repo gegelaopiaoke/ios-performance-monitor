@@ -4,6 +4,7 @@
 
 ## ✨ 核心特性
 
+### 性能监控
 - 🔄 **实时监控**: 每秒采集性能数据，实时更新图表
 - 📊 **可视化图表**: 基于Chart.js的动态曲线图显示
 - 🌐 **Web界面**: 美观的响应式Web界面，支持拖拽排序
@@ -11,10 +12,23 @@
 - 🎯 **应用特定监控**: 可指定Bundle ID或包名监控特定应用
 - 🔧 **线程详情**: Android支持线程状态和分类统计
 - 💾 **数据统计**: 显示当前值、平均值、最大值统计
-- 🎨 **智能交互**: 
+
+### 🧠 内存泄漏检测（NEW）
+- 🎯 **智能检测**: 基于线性回归的内存趋势分析算法
+- 🚨 **分级提醒**: 轻微/警告/严重三级提醒系统
+- ⚙️ **灵活配置**: 可调节检测阈值、时间窗口等参数
+- 📝 **事件日志**: 自动记录所有泄漏事件到日志文件
+- 🔧 **优化建议**: 针对性的代码优化和解决方案
+- 🌐 **跨平台**: iOS和Android通用检测算法
+
+### 智能交互
+- 🤖 **自动检测**: 智能识别已连接的iOS/Android设备
+- 📱 **一键启动**: 统一启动器支持多种启动模式
+- 🎨 **美观界面**: 
   - 设备选择后自动加载应用列表
   - 应用列表显示真实名称（如：微信 (com.tencent.mm)）
   - 统计面板固定位置，关键指标集中展示
+  - 内存泄漏实时可视化提醒
 
 ## 🚀 快速开始
 
@@ -33,6 +47,27 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
+### 🎯 统一启动（推荐）⭐
+
+**一键启动iOS和Android监控**:
+```bash
+# 交互式启动（自动检测设备）
+python start_unified_monitor.py
+
+# 快速启动iOS
+python start_unified_monitor.py ios
+
+# 快速启动Android
+python start_unified_monitor.py android
+
+# 同时启动两个平台
+python start_unified_monitor.py both
+```
+
+**访问地址**:
+- iOS监控: http://localhost:5002
+- Android监控: http://localhost:5003
+
 ### iOS设备监控
 
 **系统要求**:
@@ -43,10 +78,13 @@ pip install -r requirements.txt
 
 **启动方法**:
 ```bash
-# 方法1: 使用启动脚本（推荐）
+# 方法1: 统一启动器（推荐）
+python start_unified_monitor.py ios
+
+# 方法2: 使用启动脚本
 python start_ios_monitor.py
 
-# 方法2: 手动启动
+# 方法3: 手动启动
 cd ios
 python web_visualizer.py
 ```
