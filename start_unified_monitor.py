@@ -90,10 +90,6 @@ def get_local_ip():
 
 def check_ios_device():
     """检查iOS设备连接状态"""
-    # iOS 监控仅支持 macOS/Linux
-    if platform.system() == 'Windows':
-        return False
-    
     try:
         # 尝试pymobiledevice3
         result = subprocess.run(
@@ -159,15 +155,13 @@ def show_banner():
     """显示启动横幅"""
     current_os = platform.system()
     print("=" * 70)
-    print("🚀 跨平台性能监控工具 - 统一启动器 v1.2.0")
+    print("🚀 跨平台性能监控工具 - 统一启动器 v1.3.0")
     print("=" * 70)
     print(f"💻 当前系统: {current_os}")
     print("✨ 功能特性:")
+    print("  • 同时支持iOS和Android设备监控")
     if current_os == 'Windows':
-        print("  • ✅ Android 设备监控（完全支持）")
-        print("  • ❌ iOS 设备监控（仅支持 macOS/Linux）")
-    else:
-        print("  • ✅ 同时支持iOS和Android设备监控")
+        print("  • ⚠️  Windows 上 iOS 监控为实验性功能（需安装 iTunes）")
     print("  • 智能内存泄漏检测（iOS/Android通用）")
     print("  • 实时性能数据可视化")
     print("  • 灵活的配置和告警系统")
@@ -181,11 +175,11 @@ def detect_devices():
     ios_connected = check_ios_device()
     android_connected = check_android_device()
     
-    if current_os == 'Windows':
-        print(f"  ⚠️  iOS设备: 不支持（仅 macOS/Linux）")
-    else:
-        print(f"  {'✅' if ios_connected else '❌'} iOS设备: {'已连接' if ios_connected else '未连接'}")
+    status_text = ""
+    if current_os == 'Windows' and not ios_connected:
+        status_text = " (需安装 iTunes)"
     
+    print(f"  {'✅' if ios_connected else '❌'} iOS设备: {'已连接' if ios_connected else '未连接' + status_text}")
     print(f"  {'✅' if android_connected else '❌'} Android设备: {'已连接' if android_connected else '未连接'}")
     
     return ios_connected, android_connected
@@ -243,17 +237,14 @@ def interactive_mode():
     check_ports()
     
     print("\n🎯 启动选项:")
+    print("  1. 启动iOS监控 (端口 5002)")
+    print("  2. 启动Android监控 (端口 5003)")
+    print("  3. 同时启动iOS和Android监控")
+    print("  4. 自动检测并启动（推荐）")
+    print("  0. 退出")
+    
     if current_os == 'Windows':
-        print("  2. 启动Android监控 (端口 5003)")
-        print("  4. 自动检测并启动（推荐）")
-        print("  0. 退出")
-        print("\n  ⚠️  注意: Windows 仅支持 Android 监控")
-    else:
-        print("  1. 启动iOS监控 (端口 5002)")
-        print("  2. 启动Android监控 (端口 5003)")
-        print("  3. 同时启动iOS和Android监控")
-        print("  4. 自动检测并启动（推荐）")
-        print("  0. 退出")
+        print("\n  ⚠️  提示: Windows 上 iOS 监控需要安装 iTunes 或 Apple Device Support")
     
     choice = input("\n请选择启动模式 [1-4, 0]: ").strip()
     
@@ -261,13 +252,13 @@ def interactive_mode():
     
     if choice == '1':
         # 只启动iOS
-        if current_os == 'Windows':
-            print("❌ Windows 不支持 iOS 监控，请选择 Android 监控（选项 2）")
-            return
         if not check_and_handle_port(5002, 'iOS'):
             return
         show_access_info(local_ip)
         print("\n🍎 启动iOS监控服务...")
+        if current_os == 'Windows':
+            print("⚠️  Windows 上使用 iOS 监控为实验性功能")
+            print("💡 确保已安装 iTunes 或 Apple Device Support")
         start_ios_monitor()
         
     elif choice == '2':
@@ -280,16 +271,14 @@ def interactive_mode():
         
     elif choice == '3':
         # 同时启动两个服务
-        if current_os == 'Windows':
-            print("❌ Windows 不支持 iOS 监控，无法同时启动两个平台")
-            print("💡 建议选择 Android 监控（选项 2）")
-            return
         if not check_and_handle_port(5002, 'iOS'):
             return
         if not check_and_handle_port(5003, 'Android'):
             return
         show_access_info(local_ip)
         print("\n🚀 同时启动iOS和Android监控服务...")
+        if current_os == 'Windows':
+            print("⚠️  Windows 上使用 iOS 监控为实验性功能")
         
         # 在单独的线程中启动iOS监控
         ios_thread = threading.Thread(target=start_ios_monitor, daemon=True)

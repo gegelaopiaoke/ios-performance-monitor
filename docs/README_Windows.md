@@ -2,16 +2,18 @@
 
 ## 📌 重要说明
 
-**Windows 平台仅支持 Android 设备监控**，iOS 监控功能需要在 macOS 或 Linux 上运行。
+**Windows 平台支持状况：**
+- ✅ **Android 监控**：完全支持
+- ⚠️ **iOS 监控**：**实验性功能**（需要安装 iTunes）
 
 ## ✅ 支持的功能
 
-- ✅ Android 设备性能监控
+- ✅ Android 设备性能监控（完全支持）
+- ⚠️ iOS 设备性能监控（实验性，需要 iTunes）
 - ✅ 实时 CPU、内存、FPS、线程数监控
 - ✅ Web 可视化界面
 - ✅ 内存泄漏检测
 - ✅ 数据导出和统计
-- ❌ iOS 设备监控（不支持）
 
 ## 🚀 快速开始
 
@@ -19,7 +21,8 @@
 
 - Windows 10/11
 - Python 3.8+
-- Android SDK Platform Tools (ADB)
+- **Android 监控**：Android SDK Platform Tools (ADB)
+- **iOS 监控**：iTunes 或 Apple Device Support（可选，实验性）
 
 ### 2. 安装 ADB
 
@@ -40,7 +43,19 @@
 adb version
 ```
 
-### 3. 安装 Python 依赖
+### 3. 安装 iTunes（iOS 监控需要）
+
+⚠️ **如果只需要 Android 监控，可以跳过此步骤**
+
+**选项 1：安装 iTunes（推荐）**
+- 从 [Apple 官网](https://www.apple.com/itunes/) 下载并安装 iTunes
+- 安装后无需打开，驱动会自动生效
+
+**选项 2：仅安装 Apple Device Support**
+- 适用于不想安装完整 iTunes 的用户
+- 从 Apple 官网下载独立的设备驱动
+
+### 4. 安装 Python 依赖
 
 ```cmd
 # 克隆项目
@@ -53,11 +68,13 @@ python -m venv venv
 # 激活虚拟环境
 venv\Scripts\activate
 
-# 安装依赖（使用 Windows 专用版本）
+# 安装依赖（包含 iOS 实验性支持）
 pip install -r requirements_windows.txt
 ```
 
-### 4. 准备 Android 设备
+### 5. 准备设备
+
+#### Android 设备
 
 1. 开启开发者选项：
    - 设置 → 关于手机 → 连续点击"版本号" 7次
@@ -79,22 +96,48 @@ List of devices attached
 ABC123456789    device
 ```
 
-## 📱 启动监控
+#### iOS 设备（实验性）
 
-### 方法一：使用 Android 专用启动脚本（推荐）
+1. 安装 iTunes 或 Apple Device Support（见上文）
 
+2. 连接 iOS 设备：
+   - 使用原装 USB 数据线连接
+   - 设备上会弹出"信任此电脑"提示，点击"信任"
+   - 如果没有弹出，断开重连
+
+3. 验证连接：
 ```cmd
-python start_android_monitor.py
+# 使用 pymobiledevice3 检查
+python -m pymobiledevice3 usbmux list
 ```
 
-### 方法二：使用统一启动器
+⚠️ **注意事项：**
+- Windows 上 iOS 监控为实验性功能，可能存在兼容性问题
+- 建议先在 Android 设备上测试，确认工具可正常运行
+- 如遇问题，请在 macOS 或 Linux 上使用 iOS 功能
+
+## 📱 启动监控
+
+### 方法一：使用统一启动器（推荐）
 
 ```cmd
 python start_unified_monitor.py
 ```
-- 会自动检测 Windows 系统
-- 只显示 Android 监控选项
-- 选择选项 2 或 4 启动
+- 自动检测 Windows 系统
+- 支持 iOS 和 Android 监控
+- iOS 为实验性功能，会有提示
+
+### 方法二：使用单独启动脚本
+
+**Android 监控：**
+```cmd
+python start_android_monitor.py
+```
+
+**iOS 监控：**
+```cmd
+python start_ios_monitor.py
+```
 
 ### 方法三：直接启动
 
@@ -188,7 +231,11 @@ taskkill /F /PID <进程ID>
 ```
 
 ### Q: 能否监控 iOS 设备？
-**A:** 不能。iOS 监控需要的工具（pymobiledevice3）仅支持 macOS/Linux。如需监控 iOS，请使用 macOS 或 Linux 系统。
+**A:** 可以，但为**实验性功能**。需要：
+1. 安装 iTunes 或 Apple Device Support
+2. 安装 `requirements_windows.txt` 中的所有依赖
+3. 使用 `python start_unified_monitor.py` 或 `python start_ios_monitor.py` 启动
+4. 如遇问题，建议在 macOS 或 Linux 上使用
 
 ## 💡 性能优化建议
 
@@ -213,10 +260,14 @@ taskkill /F /PID <进程ID>
 
 ## 📝 限制说明
 
-由于 Windows 平台限制：
-- **不支持 iOS 设备监控**
+Windows 平台特性：
+- **Android 监控**：✅ 完全支持，稳定可靠
+- **iOS 监控**：⚠️ 实验性支持，可能存在兼容性问题
 - 某些高级功能可能需要管理员权限
 - 部分系统信息获取方式与 macOS/Linux 不同
 
-如需完整功能（iOS + Android），建议使用 macOS 系统。
+**建议：**
+- 生产环境或关键测试，建议使用 macOS（最稳定）
+- Windows 适合日常开发和 Android 测试
+- iOS 测试建议优先选择 macOS
 

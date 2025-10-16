@@ -1,5 +1,8 @@
-# Windows 平台依赖包（仅支持 Android 监控）
-# iOS 监控功能在 Windows 上不可用
+# Windows 平台依赖包（实验性支持 iOS 监控）
+
+# iOS 设备通信 (实验性功能 - 需要安装 iTunes)
+py_ios_device==2.4.22
+pymobiledevice3==4.24.3
 
 # Web 框架 (Web界面必需)
 flask==3.1.0
@@ -15,7 +18,7 @@ simple-websocket==1.1.0
 wsproto==1.2.0
 
 # 说明：
-# 1. Windows 平台只能使用 Android 监控功能
-# 2. 需要安装 Android SDK Platform Tools (ADB)
-# 3. 启动命令: python start_android_monitor.py
+# 1. Android 监控：完全支持，需要 ADB
+# 2. iOS 监控：实验性功能，需要安装 iTunes 或 Apple Device Support
+# 3. 启动命令: python start_unified_monitor.py 或 python start_android_monitor.py
 
