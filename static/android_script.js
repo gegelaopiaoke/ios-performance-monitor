@@ -1028,3 +1028,16 @@ function ensureStatisticsPanelPosition() {
         });
     }
 }
+// 内存泄漏检测
+socket.on('memory_leak_alert', function(data) {
+    console.log('收到内存泄漏提醒:', data);
+    const alert = document.getElementById('memoryLeakAlert');
+    const message = document.getElementById('leakMessage');
+    message.textContent = `当前内存: ${data.current_memory}MB, 增长率: ${data.growth_rate}MB/分钟`;
+    alert.classList.add('show');
+    setTimeout(() => alert.classList.remove('show'), 10000);
+});
+
+function closeMemoryLeakAlert() {
+    document.getElementById('memoryLeakAlert').classList.remove('show');
+}

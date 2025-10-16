@@ -358,6 +358,32 @@
             font-weight: 600;
             color: #1d1d1f;
         }
+        
+        /* 内存泄漏检测样式 */
+        .memory-leak-alert {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            max-width: 400px;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff3b30, #ff6b6b);
+            color: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+        .memory-leak-alert.show { display: block; }
+        .alert-close {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -564,6 +590,13 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='android_script.js') }}"></script>
+    <script src="{{ url_for('static', filename='android_script.js') }}">    </script>
+    
+    <!-- 内存泄漏提醒弹窗 -->
+    <div id="memoryLeakAlert" class="memory-leak-alert">
+        <button class="alert-close" onclick="closeMemoryLeakAlert()">&times;</button>
+        <h3>🚨 检测到内存泄漏</h3>
+        <p id="leakMessage">内存持续增长，请检查应用</p>
+    </div>
 </body>
 </html>
