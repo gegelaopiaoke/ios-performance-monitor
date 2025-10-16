@@ -652,9 +652,20 @@ socket.on('status', function(data) {
 socket.on('performance_data', function(data) {
     if (!isMonitoring) return;
     
+    // 计算CPU占用信息
+    const cpuCores = data.cpu_cores || 8; // CPU核心数
+    const appCpuRaw = data.cpu; // 应用CPU（相对单核，可能超过100%）
+    const systemCpu = data.system_cpu; // 整机CPU使用率
+    
+    // 计算应用占整机的百分比：appCpuRaw / cpuCores
+    const appCpuPercent = (appCpuRaw / cpuCores).toFixed(1);
+    
     // 立即更新当前值显示
-    document.getElementById('currentCpu').textContent = `${data.cpu.toFixed(1)}%`;
-    document.getElementById('currentSystemCpu').textContent = `${data.system_cpu.toFixed(1)}%`;
+    document.getElementById('currentCpu').textContent = `${appCpuRaw.toFixed(1)}%`;
+    document.getElementById('cpuPercentOfTotal').textContent = `${appCpuPercent}%`;
+    document.getElementById('cpuCores').textContent = `${cpuCores}核`;
+    document.getElementById('currentSystemCpu').textContent = `${systemCpu.toFixed(1)}%`;
+    document.getElementById('cpuCoreInfo').textContent = `${cpuCores}核心`;
     document.getElementById('currentMemory').textContent = `${data.memory.toFixed(1)}MB`;
     document.getElementById('systemMemInfo').textContent = `系统: ${data.system_memory_used.toFixed(0)}/${data.system_memory_total.toFixed(0)}MB`;
     document.getElementById('currentThreads').textContent = data.threads;

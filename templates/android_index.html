@@ -397,14 +397,18 @@
 
         <div class="current-values">
             <div class="value-card">
-                <div class="label">应用CPU使用率</div>
+                <div class="label">应用CPU占用</div>
                 <div class="value" id="currentCpu">0%</div>
-                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">相对单核</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">
+                    占整机: <span id="cpuPercentOfTotal">0%</span> | <span id="cpuCores">0核</span>
+                </div>
             </div>
             <div class="value-card">
-                <div class="label">整机CPU使用率</div>
+                <div class="label">整机CPU负载</div>
                 <div class="value" id="currentSystemCpu">0%</div>
-                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">系统总体</div>
+                <div style="font-size: 10px; color: #86868b; margin-top: 2px;">
+                    <span id="cpuCoreInfo">8核心</span>
+                </div>
             </div>
             <div class="value-card">
                 <div class="label">应用内存</div>
