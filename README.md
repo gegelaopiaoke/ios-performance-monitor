@@ -186,18 +186,35 @@ python android_web_visualizer.py
 
 ## 📋 系统要求
 
-- macOS (推荐) / Linux
-- Python 3.13+
+### 完整功能（iOS + Android）
+- **macOS** (推荐) / **Linux**
+- Python 3.8+
 - 管理员权限
 - iOS设备已连接并信任电脑
 
+### Android 监控（Windows 支持）
+- **Windows 10/11** / macOS / Linux
+- Python 3.8+
+- Android SDK Platform Tools (ADB)
+- Android设备已开启USB调试
+
+📖 **Windows 用户请查看**: [Windows 平台使用说明](docs/README_Windows.md)
+
 ## 🛠️ 依赖包
 
-主要依赖包已安装在虚拟环境中:
+### macOS/Linux (完整功能)
+主要依赖包（安装 `requirements.txt`）:
 - `py_ios_device`: iOS设备通信
 - `pymobiledevice3`: iOS设备管理
 - `flask`: Web框架
 - `flask-socketio`: 实时通信
+- `psutil`: 系统信息
+
+### Windows (仅 Android)
+精简依赖包（安装 `requirements_windows.txt`）:
+- `flask`: Web框架
+- `flask-socketio`: 实时通信
+- `psutil`: 系统信息
 
 ## 💡 使用技巧
 

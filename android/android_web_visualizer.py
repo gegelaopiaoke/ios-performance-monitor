@@ -1054,29 +1054,55 @@ if __name__ == '__main__':
     if not check_admin():
         print("⚠️ 建议以管理员权限运行以获得完整功能")
     
-    # 获取本机IP地址
+    # 获取本机IP地址（跨平台）
     import socket
     hostname = socket.gethostname()
     local_ips = []
     
     try:
-        # 获取所有网络接口的IP地址
-        result = subprocess.run(['ifconfig'], capture_output=True, text=True)
-        if result.returncode == 0:
-            lines = result.stdout.split('\n')
-            for line in lines:
-                if 'inet ' in line and 'broadcast' in line:
-                    ip = line.strip().split(' ')[1]
-                    if ip != '127.0.0.1':
-                        local_ips.append(ip)
+        if platform.system() == 'Windows':
+            # Windows: 使用 ipconfig
+            result = subprocess.run(['ipconfig'], capture_output=True, text=True, encoding='gbk')
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if 'IPv4' in line or 'IP Address' in line:
+                        parts = line.split(':')
+                        if len(parts) > 1:
+                            ip = parts[1].strip()
+                            if ip and ip != '127.0.0.1' and not ip.startswith('169.254'):
+                                local_ips.append(ip)
+        else:
+            # macOS/Linux: 使用 ifconfig
+            result = subprocess.run(['ifconfig'], capture_output=True, text=True)
+            if result.returncode == 0:
+                lines = result.stdout.split('\n')
+                for line in lines:
+                    if 'inet ' in line and 'broadcast' in line:
+                        ip = line.strip().split(' ')[1]
+                        if ip != '127.0.0.1':
+                            local_ips.append(ip)
     except:
+        pass
+    
+    # 备用方法：使用 socket 获取
+    if not local_ips:
         try:
-            # 备用方法
-            local_ip = socket.gethostbyname(hostname)
+            # 尝试连接外部地址以获取本机IP
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            local_ip = s.getsockname()[0]
+            s.close()
             if local_ip != '127.0.0.1':
                 local_ips.append(local_ip)
         except:
-            pass
+            try:
+                # 最后的备用方法
+                local_ip = socket.gethostbyname(hostname)
+                if local_ip != '127.0.0.1':
+                    local_ips.append(local_ip)
+            except:
+                pass
     
     # 选择一个合适的IP地址（优先选择192.168段）
     external_ip = None
