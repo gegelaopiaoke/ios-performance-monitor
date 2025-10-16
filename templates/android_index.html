@@ -510,6 +510,20 @@
             </div>
         </div>
 
+        <!-- 内存泄漏检测面板 -->
+        <div class="controls" id="leakSettings" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+            <h3>🧠 内存泄漏检测 <span style="background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 12px; margin-left: 10px;">实时监控</span></h3>
+            <div style="background: rgba(255,255,255,0.1); padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                <div style="font-size: 14px; line-height: 1.6;">
+                    <p style="margin: 5px 0;">✅ 自动检测内存持续增长</p>
+                    <p style="margin: 5px 0;">✅ 智能分析内存泄漏风险</p>
+                    <p style="margin: 5px 0;">✅ 实时弹窗提醒</p>
+                    <p style="margin: 5px 0;">⏱️ 监控 5 分钟后开始检测</p>
+                </div>
+            </div>
+            <button class="btn" onclick="testMemoryLeakAlert()" style="background: white; color: #667eea; width: 100%;">🧪 测试内存泄漏提醒</button>
+        </div>
+
         <div class="chart-container" id="cpuChart-container" draggable="true">
             <h3>📊 CPU使用率</h3>
             <div class="chart-wrapper" data-chart="cpu">
