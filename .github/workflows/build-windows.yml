@@ -35,7 +35,7 @@ jobs:
         pyinstaller build_android.spec
     
     - name: Upload Android Monitor EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Android性能监控-Windows
         path: dist/Android性能监控.exe
@@ -73,7 +73,7 @@ jobs:
         pyinstaller build_unified.spec
     
     - name: Upload Unified Monitor EXE
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: 跨平台性能监控-Windows
         path: dist/跨平台性能监控.exe
