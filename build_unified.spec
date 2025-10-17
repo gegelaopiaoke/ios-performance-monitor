@@ -6,16 +6,24 @@ PyInstaller 配置文件 - 跨平台统一性能监控工具
 
 block_cipher = None
 
+import os
+
+# 动态添加数据文件，避免空目录导致打包失败
+datas = [
+    ('templates', 'templates'),
+    ('android', 'android'),
+    ('ios', 'ios'),
+]
+
+# 只在 static 目录存在且不为空时添加
+if os.path.exists('static') and os.listdir('static'):
+    datas.append(('static', 'static'))
+
 a = Analysis(
     ['start_unified_monitor.py'],
     pathex=[],
     binaries=[],
-    datas=[
-        ('templates', 'templates'),
-        ('static', 'static'),
-        ('android', 'android'),
-        ('ios', 'ios'),
-    ],
+    datas=datas,
     hiddenimports=[
         'flask',
         'flask_socketio',
