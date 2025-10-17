@@ -886,7 +886,11 @@ class WebPerformanceAnalyzer(object):
 # 完全复制main.py的权限检查函数（逻辑一模一样）
 def check_admin():
     if platform.system() == "Windows":
-        return os.getuid() == 0  # Windows管理员权限检查
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except:
+            return False
     else:  # Linux or macOS
         return os.geteuid() == 0  # Linux/Mac管理员权限检查
 

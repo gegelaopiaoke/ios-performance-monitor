@@ -776,10 +776,11 @@ def api_get_devices():
         device_list = []
         for d in devices:
             device_list.append({
-                'udid': d,
-                'name': d,
+                'UniqueDeviceID': d,
+                'DeviceName': d,
                 'ConnectionType': 'USB',
-                'DeviceClass': 'Android'
+                'DeviceClass': 'Android',
+                'Properties': {'DeviceName': d}
             })
         
         return {'success': True, 'devices': device_list}
